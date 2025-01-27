@@ -1,0 +1,45 @@
+# ไฟล์และโฟลเดอร์ที่สร้างขึ้นอัตโนมัติจาก Unity และไม่จำเป็นต้องติดตามใน Git
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+
+# การตั้งค่าการใช้งานส่วนตัวของผู้ใช้
+.vscode/
+UserSettings/
+
+# Node.js dependencies
+node_modules/
+package-lock.json
+
+# ไฟล์จาก Unity Package Manager
+Packages/packages-lock.json
+
+# Visual Studio / Rider
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.opendb
+*.VC.db
+*.db
+*.mdb
+*.bak
+
+# การตั้งค่าไฟล์สำหรับ Linux, Mac และ Windows
+.DS_Store
+Thumbs.db
+
+# ไฟล์บันทึกจาก Unity
+*.log
+*.pid

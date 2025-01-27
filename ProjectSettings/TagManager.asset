@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Peg
+  - Dispenser
+  - Wire
+  - Battery
+  - Button
+  - Bulb
+  - Timer
+  - Flute
+  - Balloon
+  - Motor
+  - Switch
+  - LongWire
+  - Solar
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - wall
+  - Water
+  - UI
+  - pipe
+  - Grab
+  - Player
+  - Laver
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
