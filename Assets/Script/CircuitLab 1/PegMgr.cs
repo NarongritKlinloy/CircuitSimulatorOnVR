@@ -21,7 +21,8 @@ public class PegMgr : MonoBehaviour, IPeg
     GameObject original = null;
     CircuitComponent originalScript = null;
 
-	void Start () {
+    void Start()
+    {
         clickSound.GetComponent<AudioSource>();
     }
 
@@ -33,7 +34,8 @@ public class PegMgr : MonoBehaviour, IPeg
         source.Play();
     }
 
-    void Update () {
+    void Update()
+    {
         // If we have an original object referenced, and that object has been dropped, center it on this peg
         if (original && !originalScript.IsHeld)
         {
@@ -52,12 +54,11 @@ public class PegMgr : MonoBehaviour, IPeg
             Point start = GetCoordinates();
             original.transform.parent = transform;
             original.gameObject.GetComponent<Rigidbody>().useGravity = false;
-            original.gameObject.GetComponent<Rigidbody>().isKinematic = true;
+            original.gameObject.GetComponent<Rigidbody>().isKinematic = true; // เปลี่ยนจาก true เป็น false
 
-            // Disable box and sphere colliders so they don't interfere with the board and other components. 
-            // We still have a small capsule collider on each component so they can be picked up from the middle.
-            original.gameObject.GetComponent<BoxCollider>().enabled = false;
-            original.gameObject.GetComponent<SphereCollider>().enabled = false;
+            // Enable or keep colliders enabled to allow grabbing
+            original.gameObject.GetComponent<BoxCollider>().enabled = true; // เปลี่ยนจาก false เป็น true
+            original.gameObject.GetComponent<SphereCollider>().enabled = false; // เปลี่ยนจาก false เป็น true
 
             // Lock rotation to the nearest 90 degrees
             Point end = LockRotation(original, original);
@@ -90,6 +91,7 @@ public class PegMgr : MonoBehaviour, IPeg
             LockRotation(clone, original);
         }
     }
+
 
     public void Reset()
     {
@@ -324,7 +326,8 @@ public class PegMgr : MonoBehaviour, IPeg
         if (other.name.StartsWith("Component"))
         {
             // Forget about the original for now
-            if (original) {
+            if (original)
+            {
                 original.transform.parent = null;
                 original = null;
             }

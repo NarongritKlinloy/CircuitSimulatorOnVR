@@ -2,39 +2,29 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Enum สำหรับกำหนดตำแหน่งของ Label (ด้านบน, ด้านล่าง, ตรงกลาง)
 public enum LabelAlignment { Top, Bottom, Center };
 
-// คลาสแม่สำหรับส่วนประกอบวงจร (Circuit Components)
 public class CircuitComponent : MonoBehaviour
 {
-    // สมาชิกที่สามารถตั้งค่าได้ใน Unity Object Inspector
-    public CircuitLab Lab; // ตัวเชื่อมต่อกับห้องทดลองวงจร
+    // Public members set in Unity Object Inspector
+    public CircuitLab Lab;
 
-    // สถานะของส่วนประกอบ
-    public bool IsPlaced { get; protected set; } // ระบุว่าวางลงในวงจรแล้วหรือยัง
-    public bool IsHeld { get; protected set; } // ระบุว่าถูกถืออยู่หรือไม่
-    public bool IsClone { get; set; } // ระบุว่าเป็นสำเนาหรือไม่
-    public bool IsClosed { get; protected set; } // ระบุว่าสวิตช์ปิดอยู่หรือไม่
-    public bool IsTesting { get; protected set; }
+    public bool IsPlaced { get; protected set; }
+    public bool IsHeld { get; protected set; }
+    public bool IsClone { get; set; }
+    public bool IsClosed { get; protected set; }
 
-    // คุณสมบัติภายใน
-    public Point StartingPeg { get; set; } // จุดเริ่มต้นของส่วนประกอบ
-    protected Direction Direction { get; set; } // ทิศทางของส่วนประกอบ
-    protected bool IsActive { get; set; } // ระบุว่าส่วนประกอบทำงานอยู่หรือไม่
-    protected bool IsForward { get; set; } // ระบุทิศทางกระแส
-    protected bool IsShortCircuit { get; set; } // ระบุว่าส่วนประกอบลัดวงจรหรือไม่
-    protected double Voltage { get; set; } // ค่าแรงดันไฟฟ้า
-    protected double Current { get; set; } // ค่ากระแสไฟฟ้า
-    public GameObject GameObject { get; private set; }
-    public object Component { get; private set; }
-    public Point StartingPoint { get; private set; }
-    public Point End { get; set; }
-    // ค่าคงที่สำหรับกระแสที่สำคัญและการจัดตำแหน่ง Label
-    const double SignificantCurrent = 0.0000001; // กระแสไฟขั้นต่ำที่ถือว่าสำคัญ
-    const float LabelOffset = 0.022f; // ระยะห่างสำหรับจัดตำแหน่ง Label
+    protected Point StartingPeg { get; set; }
+    protected Direction Direction { get; set; }
+    protected bool IsActive { get; set; }
+    protected bool IsForward { get; set; }
+    protected bool IsShortCircuit { get; set; }
+    protected double Voltage { get; set; }
+    protected double Current { get; set; }
 
-    // คอนสตรัคเตอร์ตั้งค่าเริ่มต้น
+    const double SignificantCurrent = 0.0000001;
+    const float LabelOffset = 0.022f;
+
     protected CircuitComponent()
     {
         IsPlaced = false;
@@ -43,31 +33,14 @@ public class CircuitComponent : MonoBehaviour
         IsClosed = true;
         IsActive = false;
         IsForward = true;
-        IsTesting = false;
         IsShortCircuit = false;
         Voltage = 0f;
         Current = 0f;
-
     }
 
-    // ฟังก์ชันเริ่มต้นและอัปเดต (สามารถ override ในคลาสลูกได้)
-    protected virtual void Start()
-    {
-        StartingPeg = new Point(0, 0); // กำหนดค่าเริ่มต้น
-        End = new Point(0, 0);         // กำหนดค่าเริ่มต้น
-    }
-    public virtual void SetEnd(Point end)
-    {
-        End = end;
-    }
+    protected virtual void Start() { }
     protected virtual void Update() { }
-    public virtual float GetValue()
-    {
-        return 0f; // ค่า default
-    }
 
-
-    // ฟังก์ชันวางส่วนประกอบในวงจร
     public void Place(Point start, Direction dir)
     {
         IsPlaced = true;
@@ -75,93 +48,81 @@ public class CircuitComponent : MonoBehaviour
         Direction = dir;
     }
 
-    // ฟังก์ชันกำหนดสถานะการทำงาน
     public virtual void SetActive(bool isActive, bool isForward)
     {
         IsActive = isActive;
         IsForward = isForward;
     }
 
-    // ฟังก์ชันกำหนดสถานะลัดวงจร
     public virtual void SetShortCircuit(bool isShortCircuit, bool isForward)
     {
         IsShortCircuit = isShortCircuit;
         IsForward = isForward;
     }
 
-    // ฟังก์ชันคืนค่าแรงดันไฟฟ้า
     public double GetVoltage()
     {
         return Voltage;
     }
-    public virtual void SetValue(float value)
-    {
-        Debug.Log($"Setting value {value} for component: {name}");
-    }
 
-    // ฟังก์ชันตั้งค่าแรงดันไฟฟ้า
     public virtual void SetVoltage(double voltage)
     {
         Voltage = voltage;
     }
 
-    // ฟังก์ชันตั้งค่ากระแสไฟฟ้า
     public virtual void SetCurrent(double current)
     {
         Current = current;
     }
 
-    // ตรวจสอบว่ากระแสมีค่ามากพอหรือไม่
     protected bool IsCurrentSignificant()
     {
         return (Current > SignificantCurrent);
     }
 
-    // ฟังก์ชันสลับสถานะ (สำหรับส่วนประกอบประเภท Binary เช่น Switch)
+    // Toggle the state of a binary component (for example, a switch)
     public virtual void Toggle()
     {
     }
 
-    // ฟังก์ชันปรับพฤติกรรมส่วนประกอบ
+    // Adjust the behavior of a component with various modes
     public virtual void Adjust()
     {
     }
 
-    // ฟังก์ชันรีเซ็ตสถานะส่วนประกอบ
+    // Reset any component-specific state that might need resetting
     protected virtual void Reset()
     {
     }
 
-    // ฟังก์ชันเมื่อเลือกส่วนประกอบ
     public virtual void SelectEntered()
     {
         IsHeld = true;
 
-        // เปิดการทำงานของ Collider เพื่อให้สามารถวางใหม่ได้
+        // Enable box and sphere colliders so this piece can be placed somewhere else on the board.
         GetComponent<BoxCollider>().enabled = true;
         GetComponent<SphereCollider>().enabled = true;
 
         if (IsPlaced)
         {
-            Lab.RemoveComponent(this.gameObject, StartingPeg); // ลบออกจากวงจร
+            Lab.RemoveComponent(this.gameObject, StartingPeg);
+
             IsPlaced = false;
         }
 
-        // รีเซ็ตสถานะของส่วนประกอบ
+        // Reinitialize component state
         Reset();
     }
 
-    // ฟังก์ชันเมื่อปล่อยส่วนประกอบ
     public virtual void SelectExited()
     {
         IsHeld = false;
 
-        // เปิดการทำงานของแรงโน้มถ่วงเมื่อปล่อยส่วนประกอบ
+        // Make sure gravity is enabled any time we release the object
         GetComponent<Rigidbody>().isKinematic = false;
         GetComponent<Rigidbody>().useGravity = true;
     }
 
-    // เล่นเสียงด้วย AudioSource พร้อมตั้งค่าหน่วงเวลา
     protected IEnumerator PlaySound(AudioSource source, float delay)
     {
         yield return new WaitForSeconds(delay);
@@ -170,7 +131,6 @@ public class CircuitComponent : MonoBehaviour
         source.Play();
     }
 
-    // จัดตำแหน่งและหมุน Label ตามตำแหน่งและทิศทาง
     protected void RotateLabel(GameObject label, LabelAlignment alignment)
     {
         var rotation = label.transform.localEulerAngles;
@@ -196,18 +156,17 @@ public class CircuitComponent : MonoBehaviour
                     LabelAlignment.Top => LabelOffset,
                     LabelAlignment.Bottom => -LabelOffset,
                     _ => 0
-                };
-                break;
+                }; break;
             default:
-                Debug.Log("Unrecognized direction!"); // กรณีทิศทางไม่ถูกต้อง
+                Debug.Log("Unrecognized direction!");
                 break;
         }
 
-        // ตั้งค่าการหมุนและตำแหน่งของ Label
+        // Apply label positioning
         label.transform.localEulerAngles = rotation;
         label.transform.localPosition = position;
     }
 }
 
-// Enum สำหรับกำหนดทิศทาง
 public enum Direction { North, South, East, West };
+

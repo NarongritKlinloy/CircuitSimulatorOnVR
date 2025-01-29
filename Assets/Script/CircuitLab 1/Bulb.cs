@@ -65,7 +65,8 @@ public class Bulb : CircuitComponent, IResistor
 
 
     public override void SetCurrent(double current)
-    {
+    {   
+        //Debug.Log($"SetCurrent called with value: {current}");
         if (this == null || filament == null) return;
 
         Current = current;
