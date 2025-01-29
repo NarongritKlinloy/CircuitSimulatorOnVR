@@ -5,8 +5,6 @@ using SpiceSharp;
 using SpiceSharp.Components;
 using SpiceSharp.Simulations;
 using UnityEngine.XR.Interaction.Toolkit;
-using System.Globalization;
-using System;
 
 public class CircuitLab : MonoBehaviour, ICircuitLab
 {
@@ -27,8 +25,8 @@ public class CircuitLab : MonoBehaviour, ICircuitLab
     public Vector3 pegScale;
 
     Board board;
-    const int numRows = 32;
-    const int numCols = 10;
+    const int numRows = 9;
+    const int numCols = 9;
 
     float yHandleStart = 0f;
     float yTableStart = 0f;
@@ -55,37 +53,16 @@ public class CircuitLab : MonoBehaviour, ICircuitLab
 
     void PreloadSimulator()
     {
-        // สร้างวงจรทดสอบเบื้องต้นเพื่อโหลด SpiceSharp ล่วงหน้า
+        // Build a simple circuit and run an analysis to preload the SpiceSharp simulator. 
+        // This avoids a multi-second lag when connecting our first circuit on the breadboard.
         var ckt = new Circuit(
-            new VoltageSource("V1", "IN", "0", 5.0),  // แหล่งจ่ายแรงดัน 5V
-            new Resistor("R1", "IN", "OUT", 1.0e3),   // ตัวต้านทาน 1kΩ
-            new Resistor("R2", "OUT", "0", 2.0e3)     // ตัวต้านทาน 2kΩ
-        );
-
-        // สร้าง simulation สำหรับ Operating Point Analysis (DC Analysis)
-        var dc = new OP("DC_Analysis");
-
-        // สร้าง export objects สำหรับดึงค่าแรงดันใน Node "IN" และ "OUT"
-        var exportVin = new RealVoltageExport(dc, "IN");
-        var exportVout = new RealVoltageExport(dc, "OUT");
-
-        try
-        {
-            dc.Run(ckt);
-
-            double vin = exportVin.Value;
-            double vout = exportVout.Value;
-
-            Debug.Log($"Input Voltage: {vin} V");
-            Debug.Log($"Output Voltage: {vout} V");
-            Debug.Log("Preload simulation completed successfully.");
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"Error in preload simulation: {ex.Message}");
-        }
+            new VoltageSource("V1", "in", "0", 1.0),
+            new Resistor("R1", "in", "out", 1.0e4),
+            new Resistor("R2", "out", "0", 2.0e4)
+            );
+        var dc = new OP("DC 1");
+        dc.Run(ckt);
     }
-
 
     void Update()
     {
@@ -437,11 +414,16 @@ public class CircuitLab : MonoBehaviour, ICircuitLab
         List<PlacedComponent> batteries = new List<PlacedComponent>();
         foreach (PlacedComponent component in board.Components)
         {
+            //Debug.Log($"Checking board component: {component.GameObject.name}, Type: {component.Component.GetType().Name}");
             if (component.Component is IBattery || component.Component is ISolar)
             {
                 batteries.Add(component);
+                //Debug.Log($"Battery FOUND: {component.GameObject.name}");
+
             }
         }
+        //Debug.Log($"Total batteries found: {batteries.Count}");
+
 
         foreach (PlacedComponent battery in batteries)
         {
@@ -511,45 +493,66 @@ public class CircuitLab : MonoBehaviour, ICircuitLab
                 // Create exports so we can access component properties
                 foreach (PlacedComponent component in components)
                 {
+                    //Debug.Log($"Checking component: {component.GameObject.name}, Type: {component.Component.GetType().Name}");
+
                     bool isBattery = (component.Component is IBattery);
+                    //Debug.Log($"isBattery: {isBattery}, Component Type: {component.Component.GetType().Name}");
 
                     if (component.Generation == gen)
                     {
-                        // ใช้ node ที่ขึ้นอยู่กับว่าเป็นแบตเตอรี่หรือไม่
                         component.VoltageExport = new RealVoltageExport(op, isBattery ? component.End.ToString() : component.Start.ToString());
                         component.CurrentExport = new RealPropertyExport(op, "V" + component.GameObject.name, "i");
+
+                        Debug.Log($"component.VoltageExport.Value: {component.VoltageExport.Value}, component.CurrentExport : {component.CurrentExport.Value}");
                     }
                 }
 
+                // Run the simulation
                 try
                 {
-                    // Run the simulation
                     op.Run(ssCircuit);
-
-                    // หลังจากรัน simulation เสร็จแล้ว ให้ดึงค่าจาก export objects
+                    // ก่อนการจำลอง
+                   
+                    //Debug.Log("[SpiceSharp] Simulation Completed Successfully");
+                    // After simulation, process the exported data
+                    // Step 1: Find the minimum voltage for normalization
                     double minVoltage = double.MaxValue;
+
                     foreach (PlacedComponent component in components)
                     {
                         if (component.Generation == gen)
                         {
-                            double v = component.VoltageExport.Value;
-                            if (v < minVoltage)
-                                minVoltage = v;
+                            if (component.VoltageExport.Value < minVoltage)
+                                minVoltage = component.VoltageExport.Value;
+
                         }
                     }
 
-                    // ปรับและส่งค่า voltage และ current ไปที่ component
+                    // Step 2: Update voltage and current for each component
                     foreach (PlacedComponent component in components)
                     {
                         if (component.Generation == gen)
                         {
-                            double voltage = component.VoltageExport.Value - minVoltage;
+                            // ตรวจสอบว่า VoltageExport และ CurrentExport มีค่าไหม
+                            if (component.VoltageExport == null || component.CurrentExport == null)
+                            {
+                                Debug.LogWarning($"[Warning] Component: {component.GameObject.name} ไม่มีค่า VoltageExport หรือ CurrentExport");
+                                continue;
+                            }
+
+                            // อ่านค่าแรงดันและกระแส
+                            var voltage = component.VoltageExport.Value - minVoltage;
+                            var current = component.CurrentExport.Value;
+
+                            // อัปเดตค่าแรงดันและกระแสในคอมโพเนนต์
                             component.Component.SetVoltage(voltage);
-
-                            double current = component.CurrentExport.Value;
                             component.Component.SetCurrent(current);
+
+                            // Debug log ค่าที่ได้
+                            //Debug.Log($"[Simulation] Component: {component.GameObject.name}, Type: {component.Component.GetType().Name}, Voltage: {voltage}V, Current: {current}A");
                         }
                     }
+
 
                     if (!battery.ActiveCircuit)
                     {
@@ -586,7 +589,6 @@ public class CircuitLab : MonoBehaviour, ICircuitLab
                     }
                 }
             }
-
             // Case 3: No complete circuit
             else
             {
@@ -747,104 +749,67 @@ public class CircuitLab : MonoBehaviour, ICircuitLab
     void AddSpiceSharpEntity(List<SpiceSharp.Entities.Entity> entities, PlacedComponent placedComponent, bool forward)
     {
         string name = placedComponent.GameObject.name;
-        string start = forward ? placedComponent.Start.ToString() : placedComponent.End.ToString();
-        string end = forward ? placedComponent.End.ToString() : placedComponent.Start.ToString();
+        string start = forward ? GetNodeName(placedComponent.Start) : GetNodeName(placedComponent.End);
+        string end = forward ? GetNodeName(placedComponent.End) : GetNodeName(placedComponent.Start);
         string mid = name;
         CircuitComponent component = placedComponent.Component;
+
+        // เพิ่มเมธอดช่วยในการตั้งชื่อโหนด
+        string GetNodeName(Point p) => $"N{p.x}_{p.y}";
 
         // Add the appropriate SpiceSharp component. Each component will
         // also have a 0 voltage source added next to it to act as an ammeter.
         if (component is IBattery battery)
         {
-            // If this is the first voltage source we are adding, make sure one of 
-            // the ends is specified as ground, or "0" Volt point of reference.
+            // ถ้าเป็นแหล่งจ่ายแรงดันไฟฟ้าแรก ให้กำหนดหนึ่งในขั้วเป็น ground
             if (entities.Count == 0)
             {
-                entities.Add(new VoltageSource("V" + name, start, "0", 0f));
-                entities.Add(new VoltageSource(name, "0", end, battery.BatteryVoltage));
+                entities.Add(new VoltageSource($"V{name}_ammeter", start, "0", 0.0));
+                entities.Add(new VoltageSource($"{name}_source", "0", end, battery.BatteryVoltage));
             }
             else
             {
-                entities.Add(new VoltageSource("V" + name, start, mid, 0f));
-                entities.Add(new VoltageSource(name, mid, end, battery.BatteryVoltage));
+                entities.Add(new VoltageSource($"V{name}_ammeter", start, mid, 0.0));
+                entities.Add(new VoltageSource($"{name}_source", mid, end, battery.BatteryVoltage));
             }
         }
         else if (component is ISolar solar)
         {
-            string mid2 = name + "2";
+            string mid2 = $"{name}2";
 
-            // If this is the first voltage source we are adding, make sure one of 
-            // the ends is specified as ground, or "0" Volt point of reference.
+            // ถ้าเป็นแหล่งจ่ายแรงดันไฟฟ้าแรก ให้กำหนดหนึ่งในขั้วเป็น ground
             if (entities.Count == 0)
             {
-                entities.Add(new VoltageSource("V" + name, start, "0", 0f));
-                entities.Add(new VoltageSource(name, "0", mid2, solar.SolarVoltage));
+                entities.Add(new VoltageSource($"V{name}_ammeter", start, "0", 0.0));
+                entities.Add(new VoltageSource($"{name}_source", "0", mid2, solar.SolarVoltage));
             }
             else
             {
-                entities.Add(new VoltageSource("V" + name, start, mid, 0f));
-                entities.Add(new VoltageSource(name, mid, mid2, solar.SolarVoltage));
+                entities.Add(new VoltageSource($"V{name}_ammeter", start, mid, 0.0));
+                entities.Add(new VoltageSource($"{name}_source", mid, mid2, solar.SolarVoltage));
             }
 
-            // Also add a resistor to simulate the way current changes with the
-            // angle to the sun even though voltage may be the same.
-            entities.Add(new Resistor("R" + name, mid2, end, solar.SolarResistance));
+            // เพิ่มตัวต้านทานเพื่อจำลองการเปลี่ยนแปลงกระแสตามมุมต่อดวงอาทิตย์
+            entities.Add(new Resistor($"R{name}", mid2, end, solar.SolarResistance));
         }
         else if (component is IResistor resistor)
         {
-            entities.Add(new VoltageSource("V" + name, mid, start, 0f));
+            entities.Add(new VoltageSource($"V{name}_ammeter", mid, start, 0.0));
             entities.Add(new Resistor(name, mid, end, resistor.Resistance));
         }
-        else if (component is IDiode diode)
-        {
-            // 1) เพิ่ม Model ถ้ายังไม่มี
-            //    (ถ้าในวงจรของคุณยังไม่มี DiodeModel ชื่อ DDefault อยู่ก่อน)
-            var dModel = new SpiceSharp.Components.DiodeModel(diode.DiodeModelName);
-            dModel.SetParameter("Is", 1e-14);   // Reverse saturation current
-                                                // ตั้งค่าพารามิเตอร์อื่น ๆ ตามต้องการ เช่น dModel.SetParameter("N", 1.0);
-            entities.Add(dModel);
-
-            // 2) เพิ่ม "Volt Source" 0V สำหรับวัดกระแส
-            entities.Add(new VoltageSource("V" + name, mid, start, 0f));
-
-            // 3) เพิ่ม Diode Entity
-            entities.Add(new SpiceSharp.Components.Diode(name, mid, end, diode.DiodeModelName));
-        }
-
         else if (component is IConductor)
         {
-            // All normal conductors (wires, switches, etc.) are considered lossless
-            entities.Add(new VoltageSource("V" + name, mid, start, 0f));
+            // ตัวนำทั่วไป (สายไฟ, สวิตช์ ฯลฯ) ถือว่าไม่มีการสูญเสีย
+            entities.Add(new VoltageSource($"V{name}_ammeter", mid, start, 0.0));
+            // ตรวจสอบว่าคลาส LosslessTransmissionLine ยังมีอยู่และใช้งานได้
             entities.Add(new LosslessTransmissionLine(name, mid, end, end, mid));
         }
-        else if (component is ICInverter inverter)
-        {
-            string startNode = "N" + (forward ? placedComponent.Start.ToString() : placedComponent.End.ToString());
-            string endNode = "N" + (forward ? placedComponent.End.ToString() : placedComponent.Start.ToString());
-
-            // ตรวจสอบว่า inverter มีชื่อเฉพาะ
-            string inverterName = "INV_" + name;
-
-            // เพิ่ม Behavioral Voltage Source สำหรับการจำลองการทำงานของ NOT gate
-            var invModel = new BehavioralVoltageSource(inverterName, endNode, "0",
-             "V(IN) < 2.5 ? 5.0 : 0.0");
-
-            entities.Add(invModel);
-
-            // ใช้แหล่งแรงดัน 0V เพื่อจำลองกระแสของวงจร
-            var voltageProbe = new VoltageSource("V_" + name, startNode, endNode, 0.0);
-            entities.Add(voltageProbe);
-        }
-
-
-
-
-
         else
         {
             Debug.Log("Unrecognized component: " + name);
         }
     }
+
 
     IEnumerator PlaySound(AudioSource source, float delay)
     {
