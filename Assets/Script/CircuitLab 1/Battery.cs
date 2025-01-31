@@ -9,7 +9,7 @@ public class Battery : CircuitComponent, IBattery
     public GameObject labelVoltage;
     public TMP_Text labelVoltageText;
 
-    public float BatteryVoltage { get; set; }
+    public double BatteryVoltage { get;  set; }
 
     public Battery()
     {
@@ -20,7 +20,7 @@ public class Battery : CircuitComponent, IBattery
     {
         // Set voltage label text
         labelVoltageText.text = BatteryVoltage.ToString("0.#") + "V";
-        Debug.Log($"Battery initialized: {gameObject.name}, Voltage: {BatteryVoltage}V");
+        //Debug.Log($"Battery initialized: {gameObject.name}, Voltage: {BatteryVoltage}V");
 
     }
 
