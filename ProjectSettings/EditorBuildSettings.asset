@@ -12,8 +12,11 @@ EditorBuildSettings:
     path: Assets/Scenes/CircuitSIm.unity
     guid: a3e251c1bd2b8b5429530af9d3b6a28f
   - enabled: 1
-    path: Assets/Scenes/test.unity
+    path: Assets/Scenes/LoginScene.unity
     guid: 046ba0ce685a16846955f9599b4415af
+  - enabled: 1
+    path: Assets/Scenes/MainScene.unity
+    guid: 1fc840de28608d141a9af19f4b74e5a7
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: f18a4e92cd53dd444b54fed6ef0c7379, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: f170c398dc2e5f941972434c72b8a6d7, type: 2}

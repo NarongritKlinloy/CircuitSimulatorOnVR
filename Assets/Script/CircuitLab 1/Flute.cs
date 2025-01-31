@@ -10,14 +10,14 @@ public class Flute : CircuitComponent, IResistor
     public GameObject labelCurrent;
     public TMP_Text labelCurrentText;
 
-    public float resistanceValue = 220f; // ค่าความต้านทานเริ่มต้น
+    public double resistanceValue = 220f; // ค่าความต้านทานเริ่มต้น
 
-    public float Resistance
+    public double Resistance
     {
         get => resistanceValue;
         set
         {
-            resistanceValue = Mathf.Max(0, value); // ป้องกันค่าต่ำกว่า 0
+           // resistanceValue = Mathf.Max(0, value); // ป้องกันค่าต่ำกว่า 0
             UpdateResistanceLabel(); // อัปเดต Label เมื่อค่าเปลี่ยน
         }
     }

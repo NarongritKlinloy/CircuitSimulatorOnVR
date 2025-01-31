@@ -78,6 +78,14 @@ app.get("/callback", (req, res) => {
     </script>`);
 });
 
+app.get("/logout", (req, res) => {
+    res.send(`<script>
+        document.cookie = "G_AUTHUSER_H=; path=/; domain=google.com; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+        document.cookie = "G_AUTHUSER_H=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+        window.location.href = "/";
+    </script>`);
+});
+
 // ✅ Endpoint ลงทะเบียนผู้ใช้
 app.post("/register", async (req, res) => {
     const { accessToken } = req.body;

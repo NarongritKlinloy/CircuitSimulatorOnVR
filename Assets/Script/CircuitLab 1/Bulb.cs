@@ -21,7 +21,7 @@ public class Bulb : CircuitComponent, IResistor
 
     int emissionColorIdx = 1;
 
-    public float Resistance { get; private set; }
+    public double Resistance { get; private set; }
 
     public Bulb()
     {
