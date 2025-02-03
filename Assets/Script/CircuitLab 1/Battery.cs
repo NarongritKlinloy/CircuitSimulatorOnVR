@@ -13,7 +13,7 @@ public class Battery : CircuitComponent, IBattery
 
     public Battery()
     {
-        BatteryVoltage = 10f;
+        BatteryVoltage = 5f;
     }
 
     protected override void Start()
