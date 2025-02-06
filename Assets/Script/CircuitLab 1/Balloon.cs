@@ -21,7 +21,7 @@ public class Balloon : CircuitComponent, IResistor
     float normalSpeed = 1f;
     bool inflating = false;
 
-    public float Resistance { get; private set; }
+    public double Resistance { get; private set; }
 
     public Balloon()
     {

@@ -21,7 +21,7 @@ public class Bulb : CircuitComponent, IResistor
 
     int emissionColorIdx = 1;
 
-    public float Resistance { get; private set; }
+    public double Resistance { get; private set; }
 
     public Bulb()
     {
@@ -65,7 +65,8 @@ public class Bulb : CircuitComponent, IResistor
 
 
     public override void SetCurrent(double current)
-    {
+    {   
+        //Debug.Log($"SetCurrent called with value: {current}");
         if (this == null || filament == null) return;
 
         Current = current;

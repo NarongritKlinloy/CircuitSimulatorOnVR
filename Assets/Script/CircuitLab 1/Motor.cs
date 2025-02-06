@@ -15,7 +15,7 @@ public class Motor : CircuitComponent, IResistor
     float baseCurrent = 0.005f;
     float normalSpeed = 600f;
 
-    public float Resistance { get; private set; }
+    public double Resistance { get; private set; }
 
     public Motor()
     { 

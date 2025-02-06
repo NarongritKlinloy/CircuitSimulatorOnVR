@@ -3,5 +3,5 @@ using System.Collections;
 
 public interface IResistor
 {
-    float Resistance { get; }
+    double Resistance { get; }
 }
