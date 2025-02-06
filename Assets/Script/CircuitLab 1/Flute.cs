@@ -24,7 +24,7 @@ public class Flute : CircuitComponent, IResistor
 
     public Flute()
     {
-        Resistance = 220f; // ค่าเริ่มต้น
+        Resistance = 1000f; // ค่าเริ่มต้น
     }
 
     
