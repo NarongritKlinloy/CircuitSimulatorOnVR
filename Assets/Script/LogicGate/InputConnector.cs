@@ -154,7 +154,19 @@ public class InputConnector : MonoBehaviour
         if (isOn != newState)
         {
             isOn = newState;
+            // อัปเดตค่าให้ SevenSegmentDisplay
+            SevenSegmentDisplay display = FindObjectOfType<SevenSegmentDisplay>();
+            if (display != null)
+            {
+                display.UpdateDisplay();
+            }
+           // อัปเดตค่าให้ LED และ Buzzer ถ้าหากมี
+            LED led = GetComponentInChildren<LED>();
+            if (led != null) led.UpdateState();
 
+            Buzzer buzzer = GetComponentInChildren<Buzzer>();
+            if (buzzer != null) buzzer.UpdateState();
+            
             // อัปเดตค่าให้ทุก Logic Gates ที่เชื่อมต่ออยู่
             foreach (var gate in notGates) gate.UpdateState();
             foreach (var gate in andGates) gate.UpdateState();

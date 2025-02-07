@@ -9,6 +9,12 @@ public class ToggleSwitch : MonoBehaviour
 
     private void Start()
     {
+        // ถ้ายังไม่มี OutputConnector ให้สร้างขึ้นใหม่
+        if (output == null)
+        {
+            output = gameObject.AddComponent<OutputConnector>(); // สร้างใหม่สำหรับแต่ละ ToggleSwitch
+        }
+
         if (output != null)
         {
             output.isOn = isOn; // ตั้งค่าสถานะเริ่มต้น
@@ -18,6 +24,7 @@ public class ToggleSwitch : MonoBehaviour
         UpdatePivotRotation(); // อัปเดตการหมุนของ pivot ทันทีที่เริ่มต้น
     }
 
+
     private void OnMouseDown()
     {
         Toggle(); // เรียกใช้ Toggle()
@@ -26,7 +33,7 @@ public class ToggleSwitch : MonoBehaviour
     public void Toggle()
     {
         isOn = !isOn; // สลับค่า (Toggle)
-        
+
         if (output != null)
         {
             output.isOn = isOn;

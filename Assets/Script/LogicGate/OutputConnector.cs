@@ -11,6 +11,8 @@ public class OutputConnector : MonoBehaviour
 
     private WireManager wireManager;
     private Renderer renderer;
+    private static int outputIDCounter = 0; // ใช้แยก ID ของแต่ละ Output
+    public int outputID; // ระบุ ID ของแต่ละ OutputConnector
 
     void Start()
     {
@@ -19,7 +21,8 @@ public class OutputConnector : MonoBehaviour
         {
             Debug.LogError("WireManager not found in the scene! Make sure WireManager is added.");
         }
-
+        outputID = ++outputIDCounter; // ให้ ID ไม่ซ้ำกัน
+        wireManager = FindObjectOfType<WireManager>();
         renderer = GetComponent<Renderer>();
         UpdateColor();
     }

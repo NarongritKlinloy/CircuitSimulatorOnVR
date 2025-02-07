@@ -22,6 +22,8 @@ public class WireManager : MonoBehaviour
                 {
                     lineRenderer.SetPosition(0, start.outPoint.position);
                     lineRenderer.SetPosition(1, end.inPoint.position);
+                    lineRenderer.startColor = start.isOn ? Color.red : Color.black;
+                    lineRenderer.endColor = end.isOn ? Color.red : Color.black;
                 }
             }
         }
