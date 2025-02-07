@@ -14,6 +14,8 @@ public class ToggleSwitch : MonoBehaviour
             output.isOn = isOn; // ตั้งค่าสถานะเริ่มต้น
             output.UpdateState(); // อัปเดตค่าทันที
         }
+
+        UpdatePivotRotation(); // อัปเดตการหมุนของ pivot ทันทีที่เริ่มต้น
     }
 
     private void OnMouseDown()
@@ -31,13 +33,17 @@ public class ToggleSwitch : MonoBehaviour
             output.UpdateState(); // อัปเดตค่าทุกจุดที่เชื่อมต่อ
         }
 
+        UpdatePivotRotation(); // อัปเดตการหมุนของ pivot ทันที
+        //Debug.Log("Toggle Switch: " + (isOn ? "ON" : "OFF")); // แสดงสถานะใน Console
+    }
+
+    private void UpdatePivotRotation()
+    {
         if (pivot != null)
         {
             var rotation = pivot.transform.localEulerAngles;
-            rotation.y = isOn ? 15f : -15f; // หมุน Rocker
+            rotation.y = isOn ? 15f : -15f; // หมุน Rocker ตามสถานะ
             pivot.transform.localEulerAngles = rotation;
         }
-
-        Debug.Log("Toggle Switch: " + (isOn ? "ON" : "OFF")); // แสดงสถานะใน Console
     }
 }

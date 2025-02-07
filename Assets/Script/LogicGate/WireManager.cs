@@ -9,7 +9,6 @@ public class WireManager : MonoBehaviour
 
     void Update()
     {
-        // อัปเดตตำแหน่งของสายไฟให้ติดตาม Input และ Output 
         foreach (var connection in wireConnections)
         {
             OutputConnector start = connection.Key.Item1;
@@ -21,13 +20,8 @@ public class WireManager : MonoBehaviour
                 LineRenderer lineRenderer = wire.GetComponent<LineRenderer>();
                 if (lineRenderer != null)
                 {
-                    lineRenderer.SetPosition(0, start.outPoint.position); // ใช้ outPoint ของ Output
-                    lineRenderer.SetPosition(1, end.inPoint.position); // ใช้ inPoint ของ Input
-
-                    // เปลี่ยนสีของสายไฟตามสถานะ Output
-                    Color wireColor = start.isOn ? Color.green : Color.red;
-                    lineRenderer.startColor = wireColor;
-                    lineRenderer.endColor = wireColor;
+                    lineRenderer.SetPosition(0, start.outPoint.position);
+                    lineRenderer.SetPosition(1, end.inPoint.position);
                 }
             }
         }
@@ -38,8 +32,7 @@ public class WireManager : MonoBehaviour
         Debug.Log("SelectOutput called");
         if (firstOutput == null)
         {
-            firstOutput = output; // เลือก Output ตัวแรก
-
+            firstOutput = output;
         }
     }
 
@@ -47,7 +40,6 @@ public class WireManager : MonoBehaviour
     {
         if (firstOutput != null)
         {
-            // ถ้า Input นี้มีสายไฟอยู่แล้ว ให้ลบก่อน
             RemoveWire(input);
             CreateWire(firstOutput, input);
             firstOutput = null;
@@ -58,7 +50,6 @@ public class WireManager : MonoBehaviour
     {
         if (!wireConnections.ContainsKey((output, input)))
         {
-            // สร้างเส้นเชื่อมระหว่าง Output และ Input
             GameObject wire = Instantiate(wirePrefab);
             LineRenderer lineRenderer = wire.GetComponent<LineRenderer>();
 
@@ -67,7 +58,6 @@ public class WireManager : MonoBehaviour
                 lineRenderer.positionCount = 2;
                 lineRenderer.SetPosition(0, output.outPoint.position);
                 lineRenderer.SetPosition(1, input.inPoint.position);
-
                 lineRenderer.startWidth = 0.05f;
                 lineRenderer.endWidth = 0.05f;
 
@@ -76,21 +66,38 @@ public class WireManager : MonoBehaviour
                 lineRenderer.endColor = wireColor;
             }
 
-            wireConnections[(output, input)] = wire; // บันทึกสายไฟลง Dictionary
-            output.AddConnection(input); // เชื่อมโยงข้อมูล
+            wireConnections[(output, input)] = wire;
+            output.AddConnection(input);
 
-            // อัปเดตค่าให้ Output และ Input ที่เชื่อมต่อใหม่
             output.UpdateState();
             input.UpdateState();
         }
     }
+
+    public void UpdateWireColor(OutputConnector output)
+    {
+        foreach (var connection in wireConnections)
+        {
+            if (connection.Key.Item1 == output)
+            {
+                LineRenderer lineRenderer = connection.Value.GetComponent<LineRenderer>();
+                if (lineRenderer != null)
+                {
+                    Color wireColor = output.isOn ? Color.green : Color.red;
+                    lineRenderer.startColor = wireColor;
+                    lineRenderer.endColor = wireColor;
+                }
+            }
+        }
+    }
+
     public void RemoveWire(InputConnector input)
     {
         List<(OutputConnector, InputConnector)> connectionsToRemove = new List<(OutputConnector, InputConnector)>();
 
         foreach (var connection in wireConnections)
         {
-            if (connection.Key.Item2 == input) // ✅ ใช้ connection.Key อย่างถูกต้อง
+            if (connection.Key.Item2 == input)
             {
                 connectionsToRemove.Add(connection.Key);
             }
@@ -105,9 +112,6 @@ public class WireManager : MonoBehaviour
             wireConnections.Remove(key);
         }
 
-        // ตรวจสอบค่า Input ใหม่หลังจากลบสายไฟ
         input.UpdateState();
     }
-
-
 }
