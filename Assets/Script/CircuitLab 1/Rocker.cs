@@ -15,7 +15,6 @@ public class Rocker : MonoBehaviour
             // Find our parent and toggle its state
             var script = transform.parent.GetComponent<CircuitComponent>();
             var switchScript = transform.parent.GetComponent<ToggleSwitch>();
-            var clock = transform.parent.GetComponent<Clock>();
 
             if (script != null)
             {
