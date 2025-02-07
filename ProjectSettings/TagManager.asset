@@ -17,6 +17,9 @@ TagManager:
   - Switch
   - LongWire
   - Solar
+  - Structure
+  - Box
+  - NotGate
   layers:
   - Default
   - TransparentFX

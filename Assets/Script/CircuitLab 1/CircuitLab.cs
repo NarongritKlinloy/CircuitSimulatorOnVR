@@ -786,18 +786,7 @@ public class CircuitLab : MonoBehaviour, ICircuitLab
             entities.Add(new VoltageSource("V" + name, mid, start, 0f));
             entities.Add(new LosslessTransmissionLine(name, mid, end, end, mid));
         }
-        else if (component is INotGate notGate)
-        {
-            // ========= NEW: สำหรับ NOT Gate =========
-            // 1) ใส่แรงดัน 0V ไว้สำหรับการวัดกระแส (คล้ายอุปกรณ์อื่น ๆ)
-            entities.Add(new VoltageSource("V" + name, mid, start, 0.0));
-
-            // 2) สร้าง Voltage Controlled Voltage Source (E) แล้วตั้งเกน = -1 เพื่อให้ Output = -1 * Input
-            VoltageControlledVoltageSource notGateSource
-               = new VoltageControlledVoltageSource(name, mid, end, start, "0", -1.0);
-
-            entities.Add(notGateSource);
-        }
+       
         
         else
         {
