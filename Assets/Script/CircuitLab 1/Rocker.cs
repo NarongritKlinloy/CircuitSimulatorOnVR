@@ -9,11 +9,14 @@ public class Rocker : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if (!cooldownActive && 
+        if (!cooldownActive &&
             other.gameObject.name.Contains("Pinch"))
         {
             // Find our parent and toggle its state
             var script = transform.parent.GetComponent<CircuitComponent>();
+            var switchScript = transform.parent.GetComponent<ToggleSwitch>();
+            var clock = transform.parent.GetComponent<Clock>();
+
             if (script != null)
             {
                 script.Toggle();
@@ -22,10 +25,16 @@ public class Rocker : MonoBehaviour
                 var rotation = transform.localEulerAngles;
                 rotation.y = -rotation.y;
                 transform.localEulerAngles = rotation;
-
-                cooldownActive = true;
-                Invoke("Cooldown", 0.5f);
             }
+            if (switchScript != null)
+            {
+                switchScript.Toggle();
+
+
+            }
+            
+            cooldownActive = true;
+            Invoke("Cooldown", 0.5f);
         }
     }
 

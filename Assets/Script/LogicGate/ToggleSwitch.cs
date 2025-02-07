@@ -4,8 +4,8 @@ public class ToggleSwitch : MonoBehaviour
 {
     [Header("สถานะของ Switch (true = ON, false = OFF)")]
     public bool isOn = false; // ค่าเริ่มต้นของ Switch
-
     public OutputConnector output; // OutputConnector ที่ส่งค่าจากสวิตช์
+    public GameObject pivot; // วัตถุที่ใช้หมุน (เช่น Rocker)
 
     private void Start()
     {
@@ -18,12 +18,26 @@ public class ToggleSwitch : MonoBehaviour
 
     private void OnMouseDown()
     {
+        Toggle(); // เรียกใช้ Toggle()
+    }
+
+    public void Toggle()
+    {
         isOn = !isOn; // สลับค่า (Toggle)
+        
         if (output != null)
         {
             output.isOn = isOn;
             output.UpdateState(); // อัปเดตค่าทุกจุดที่เชื่อมต่อ
         }
+
+        if (pivot != null)
+        {
+            var rotation = pivot.transform.localEulerAngles;
+            rotation.y = isOn ? 15f : -15f; // หมุน Rocker
+            pivot.transform.localEulerAngles = rotation;
+        }
+
         Debug.Log("Toggle Switch: " + (isOn ? "ON" : "OFF")); // แสดงสถานะใน Console
     }
 }
