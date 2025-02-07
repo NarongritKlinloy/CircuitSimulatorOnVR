@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
+using TMPro; // ใช้สำหรับแสดงข้อความบน UI
 
 public class ToggleObjects : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class ToggleObjects : MonoBehaviour
     {
         public GameObject targetObject;  // อ้างอิง GameObject ที่จะเปิด/ปิด
         public int practiceId;           // ID ที่จะดึงจากฐานข้อมูล
+        public TextMeshProUGUI nameText; // UI Text สำหรับแสดงชื่อ
+        public TextMeshProUGUI detailText; // UI Text สำหรับแสดงรายละเอียด
     }
 
     [Header("รายการ Object ที่ต้องการ Toggle")]
@@ -32,21 +35,18 @@ public class ToggleObjects : MonoBehaviour
     {
         while (true)
         {
-            // เรียกเช็คสถานะทีละ Item
             foreach (var item in toggleItems)
             {
-                yield return StartCoroutine(GetPracticeStatus(item.practiceId, item.targetObject));
+                yield return StartCoroutine(GetPracticeStatus(item));
             }
 
-            // รอ pollingInterval วินาที
             yield return new WaitForSeconds(pollingInterval);
         }
     }
 
-    // ดึงข้อมูล practice_status จาก API แล้ว SetActive() ให้ Object
-    IEnumerator GetPracticeStatus(int practiceId, GameObject targetObj)
+    IEnumerator GetPracticeStatus(ToggleItem item)
     {
-        string finalUrl = apiUrl + practiceId;
+        string finalUrl = apiUrl + item.practiceId;
 
         using (UnityWebRequest www = UnityWebRequest.Get(finalUrl))
         {
@@ -58,9 +58,19 @@ public class ToggleObjects : MonoBehaviour
                 PracticeStatusResponse response = JsonUtility.FromJson<PracticeStatusResponse>(json);
 
                 bool isOpen = (response.practice_status == 1);
-                targetObj.SetActive(isOpen);
+                item.targetObject.SetActive(isOpen);
 
                 Debug.Log($"Practice {response.practice_id} => Status: {response.practice_status} => Active={isOpen}");
+
+                // อัปเดตชื่อและรายละเอียดของ practice
+                if (item.nameText != null)
+                {
+                    item.nameText.text = response.practice_name;
+                }
+                if (item.detailText != null)
+                {
+                    item.detailText.text = response.practice_detail;
+                }
             }
             else
             {
@@ -75,5 +85,7 @@ public class ToggleObjects : MonoBehaviour
     {
         public int practice_id;
         public int practice_status;
+        public string practice_name;  // เพิ่มชื่อของ practice
+        public string practice_detail; // เพิ่มรายละเอียดของ practice
     }
 }

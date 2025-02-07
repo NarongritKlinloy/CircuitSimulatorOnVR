@@ -11,7 +11,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/CircuitSIm.unity
     guid: a3e251c1bd2b8b5429530af9d3b6a28f
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/LoginScene.unity
     guid: 046ba0ce685a16846955f9599b4415af
   - enabled: 1

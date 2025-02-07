@@ -1,12 +1,13 @@
-/***************************************************
- * รวมโค้ดจากทั้งสองไฟล์เป็นไฟล์เดียว (server.js)
- ***************************************************/
-require("dotenv").config();
-const express = require("express");
-const mysql = require("mysql2/promise");
-const cors = require("cors");
-const axios = require("axios");
-const WebSocket = require("ws");
+// server.js (ES Module)
+import dotenv from "dotenv";
+dotenv.config();
+
+import express from "express";
+import moment from "moment-timezone";
+import mysql from "mysql2/promise";
+import cors from "cors";
+import axios from "axios";
+import { WebSocketServer } from "ws";
 
 const app = express();
 const PORT = 5000;
@@ -16,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 2) สร้าง Connection Pool (ไม่ต้องเรียก connect() เอง)
+// 2) สร้าง Connection Pool
 const db = mysql.createPool({
   host: "localhost",
   user: "root",
@@ -39,7 +40,7 @@ const db = mysql.createPool({
 })();
 
 // 4) สร้าง WebSocket Server แยกพอร์ตเป็น 8080
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocketServer({ port: 8080 });
 wss.on("connection", (ws) => {
   console.log("✅ Unity Connected via WebSocket");
   ws.send("🔹 Connected to WebSocket Server");
@@ -48,7 +49,7 @@ wss.on("connection", (ws) => {
 // ฟังก์ชันแจ้งเตือน Unity
 function notifyUnity(token) {
   wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
+    if (client.readyState === 1) {
       client.send(JSON.stringify({ accessToken: token }));
     }
   });
@@ -56,10 +57,9 @@ function notifyUnity(token) {
 
 // -----------------------------------------------------------
 // 5) Google OAuth Callback & Logout
-// -----------------------------------------------------------
+// ✅ Google OAuth Callback
 app.get("/callback", (req, res) => {
-  res.send(`
-    <script>
+  res.send(`<script>
       const hash = window.location.hash.substring(1);
       const params = new URLSearchParams(hash);
       const token = params.get("access_token");
@@ -74,17 +74,17 @@ app.get("/callback", (req, res) => {
           .then(data => {
               console.log("✅ Login Success:", data);
 
-              // แจ้งเตือน Unity ผ่าน WebSocket
+              // ✅ แจ้งเตือน Unity ผ่าน WebSocket
               fetch("http://localhost:8080/notify", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ accessToken: token })
               });
 
-              // ใช้ Custom URL Scheme เพื่อส่ง Token กลับ Unity
+              // ✅ ใช้ Custom URL Scheme เพื่อส่ง Token กลับ Unity
               window.location.href = "unitydl://auth?access_token=" + token;
 
-              // ปิด Browser
+              // ✅ ปิด Browser
               setTimeout(() => { window.open('', '_self', ''); window.close(); }, 1000);
           })
           .catch(error => {
@@ -94,18 +94,15 @@ app.get("/callback", (req, res) => {
       } else {
           window.location.href = "http://localhost:5000/error";
       }
-    </script>
-  `);
+  </script>`);
 });
 
 app.get("/logout", (req, res) => {
-  res.send(`
-    <script>
+  res.send(`<script>
       document.cookie = "G_AUTHUSER_H=; path=/; domain=google.com; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
       document.cookie = "G_AUTHUSER_H=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
       window.location.href = "/";
-    </script>
-  `);
+  </script>`);
 });
 
 // -----------------------------------------------------------
@@ -127,31 +124,43 @@ app.post("/register", async (req, res) => {
 
     console.log("✅ Google Response:", googleResponse.data);
     const { email, name } = googleResponse.data;
-    const last_active = new Date().toISOString().slice(0, 19).replace("T", " ");
     const role_id = 3;
+
+    // ✅ แก้ไขการสร้าง last_active ให้เป็นรูปแบบที่ MySQL รองรับ (YYYY-MM-DD HH:MM:SS)
+    const last_active = moment().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
 
     // เช็คว่ามี user นี้ในระบบหรือไม่
     const [existingUser] = await db.query("SELECT * FROM user WHERE uid = ?", [email]);
 
     if (existingUser.length > 0) {
       // มีอยู่แล้ว -> อัปเดต
-      await db.query("UPDATE user SET last_active = ?, role_id = ? WHERE uid = ?", [
-        last_active,
-        role_id,
-        email,
-      ]);
-      console.log(`✅ User ${email} updated successfully`);
-      notifyUnity(accessToken);
-      return res.json({ message: "✅ User updated successfully" });
+      try {
+        await db.query("UPDATE user SET last_active = ?, role_id = ? WHERE uid = ?", [
+          last_active,
+          role_id,
+          email,
+        ]);
+        console.log(`✅ User ${email} updated successfully`);
+        notifyUnity(accessToken);
+        return res.json({ message: "✅ User updated successfully" });
+      } catch (err) {
+        console.error("❌ Failed to update user:", err);
+        return res.status(500).json({ error: "❌ Failed to update user" });
+      }
     } else {
       // ยังไม่มี -> สร้างใหม่
-      await db.query(
-        "INSERT INTO user (uid, name, role_id, last_active) VALUES (?, ?, ?, ?)",
-        [email, name, role_id, last_active]
-      );
-      console.log(`✅ User ${email} registered successfully`);
-      notifyUnity(accessToken);
-      return res.json({ message: "✅ User registered successfully" });
+      try {
+        await db.query(
+          "INSERT INTO user (uid, name, role_id, last_active) VALUES (?, ?, ?, ?)",
+          [email, name, role_id, last_active]
+        );
+        console.log(`✅ User ${email} registered successfully`);
+        notifyUnity(accessToken);
+        return res.json({ message: "✅ User registered successfully" });
+      } catch (err) {
+        console.error("❌ Failed to register user:", err);
+        return res.status(500).json({ error: "❌ Failed to register user" });
+      }
     }
   } catch (error) {
     console.error("❌ Google Token Verification Failed:", error);
@@ -164,7 +173,7 @@ app.post("/register", async (req, res) => {
 // -----------------------------------------------------------
 app.get("/api/practice/:id", async (req, res) => {
   const { id } = req.params;
-  const sql = "SELECT practice_id, practice_status FROM practice WHERE practice_id = ?";
+  const sql = "SELECT practice_id, practice_name, practice_detail, practice_status FROM practice WHERE practice_id = ?";
 
   try {
     const [results] = await db.query(sql, [id]);
@@ -173,6 +182,8 @@ app.get("/api/practice/:id", async (req, res) => {
     }
     return res.json({
       practice_id: results[0].practice_id,
+      practice_name: results[0].practice_name,
+      practice_detail: results[0].practice_detail,
       practice_status: results[0].practice_status,
     });
   } catch (err) {
@@ -180,15 +191,16 @@ app.get("/api/practice/:id", async (req, res) => {
   }
 });
 
+
 // -----------------------------------------------------------
-// 8) ส่วนโค้ด API ต่าง ๆ จาก snippet แรก (CRUD user, classroom, etc.)
+// 8) ส่วนโค้ด API ต่าง ๆ (CRUD user, classroom, etc.)
 // -----------------------------------------------------------
 
 // ฟังก์ชันดึงข้อมูล user ตาม role
 async function getUsersByRole(roleId) {
   const sql = "SELECT * FROM user WHERE role_id = ?";
   const [rows] = await db.query(sql, [roleId]);
-  return rows; // ส่งกลับให้ผู้อื่นเรียกไปใช้
+  return rows;
 }
 
 // 📚 ดึงข้อมูลนักเรียน (role_id = 3)
@@ -270,6 +282,19 @@ app.get("/api/admin/count", async (req, res) => {
   } catch (err) {
     console.error("Error counting admin:", err);
     res.status(500).json({ error: "Count admin failed" });
+  }
+});
+
+// นับจำนวน report
+app.get("/api/report/count", async(req, res) => {
+  try {
+    const sql = "SELECT COUNT(*) AS reportCount FROM report";
+    const [rows] = await db.query(sql);
+    const reportCount = rows[0].reportCount;
+    res.status(200).json({ count: reportCount });
+  } catch (err) {
+    console.error("Error counting report:", err);
+    res.status(500).json({ error: "Count report failed" });
   }
 });
 
@@ -469,7 +494,9 @@ app.post("/api/classroom/student", async (req, res) => {
     }
 
     // ถ้ายัง -> เพิ่ม
-    const enrollDate = new Date().toISOString().slice(0, 19).replace("T", " ");
+    const enrollDate = new Date().toLocaleString("en-GB", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })
+      .replace(/\//g, "-")
+      .replace(",", "");
     const sql_enroll = "INSERT INTO enrollment (uid, class_id, enroll_date) VALUES (?, ?, ?)";
     await db.query(sql_enroll, [processedUid, class_id, enrollDate]);
     res.status(200).send({ message: "Added student to classroom successfully" });
@@ -492,6 +519,105 @@ app.delete("/api/classroom/student/:uid/:class_id", async (req, res) => {
   } catch (err) {
     console.error("Error deleting enrollment:", err);
     res.status(500).json({ error: "Delete enrollment failed" });
+  }
+});
+
+// เพิ่ม teacher assistant ใน classroom
+app.post("/api/classroom/assistant", async (req, res) => {
+  const { uid, class_id } = req.body;
+  const sql_user = "SELECT uid FROM user WHERE uid = ?";
+  try {
+    const [rows] = await db.query(sql_user, [uid]);
+    if(rows.length > 0){
+      const sql_teach_assistant = "INSERT INTO teach (uid, class_id, role) VALUES (?, ?, 2)";
+      await db.query(sql_teach_assistant, [uid, class_id]);
+      return res.status(200).json({ message: "Add assistant successfully" });
+    }else{
+      return res.status(404).json({ message: "User not found" });
+    }
+  } catch (err) {
+    console.error("Error inserting assistant:", err);
+    return res.status(500).json({ error: "Insert assistant failed" });
+  }
+});
+
+// ดึงข้อมูล teacher assistant ใน classroom
+app.get("/api/classroom/assistant/:class_id", async (req, res) => {
+  const { class_id } = req.params;
+  const sql_teach = "SELECT uid FROM teach WHERE class_id = ? AND role = 2";
+  try {
+    const [rows] = await db.query(sql_teach, [class_id]);
+    if (rows.length === 0) {
+      // ยังไม่มี assistant
+      return res.status(200).json([]);
+    }
+    const uids = rows.map((r) => r.uid);
+    const sql_user = "SELECT * FROM user WHERE uid IN (?)";
+    const [userRows] = await db.query(sql_user, [uids]);
+    return res.status(200).json(userRows);
+  } catch (err) {
+    console.error("Error select assistant:", err);
+    return res.status(500).json({ error: "Select assistant failed" });
+  }
+});
+
+// ลบ teacher assistant ใน classroom
+app.delete("/api/classroom/assistant/:uid/:class_id", async (req, res) => {
+  const { uid, class_id } = req.params;
+  const sql_teach_assistant = "DELETE FROM teach WHERE uid = ? AND class_id = ?";
+  try {
+    const [result] = await db.query(sql_teach_assistant, [uid, class_id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Teach not found" });
+    }
+    res.status(200).json({ message: "Assistant deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting assistant:", err);
+    res.status(500).json({ error: "Delete assistant failed" });
+  }
+});
+
+//ดึง sec ของ classroom ที่ name, year, semester ตรงกัน
+app.get("/api/classroom/sec/:class_id", async (req, res) => {
+  try {
+    const { class_id } = req.params;
+    const sql_classroom = "SELECT * FROM classroom WHERE class_id = ?";
+    const [rows] = await db.query(sql_classroom, [class_id]);
+    if (rows.length === 0) {
+      // ยังไม่มี student
+      return res.status(200).json([]);
+    }
+    const name = rows[0].name;
+    const semester = rows[0].semester;
+    const year = rows[0].year;
+
+    const sql_sec_classroom = "SELECT * FROM classroom WHERE name = ? AND semester = ? AND year = ?";
+    const [rows_sec] = await db.query(sql_sec_classroom, [name, semester, year]);
+    return res.status(200).json(rows_sec);
+
+  } catch (err) {
+    console.error("Error select sec:", err);
+    return res.status(500).json({ error: "Select sec failed" });
+  }
+});
+
+//เปลี่ยน sec
+app.put("/api/classroom/sec/:uid", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const { class_id } = req.body;
+    const enrollDate = new Date().toLocaleString("en-GB", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })
+      .replace(/\//g, "-")
+      .replace(",", "");
+    const sql_enroll = ("UPDATE enrollment SET class_id = ?, enroll_date = ? WHERE uid = ?");
+    const [updateResult] = await db.query(sql_enroll, [class_id, enrollDate, uid])
+    if (!updateResult) {
+      return res.status(400).json({ error: "Sec failed to update!" });
+    }
+    return res.status(200).json({ message: "Sec updated successfully" });
+  } catch (err) {
+    console.error("Error update sec:", err);
+    return res.status(500).json({ error: "Update sec failed" });
   }
 });
 
