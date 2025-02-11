@@ -47,6 +47,10 @@ public class WireManager : MonoBehaviour
             firstOutput = null;
         }
     }
+    public Dictionary<(OutputConnector, InputConnector), GameObject> GetWireConnections()
+    {
+        return wireConnections;
+    }
 
     private void CreateWire(OutputConnector output, InputConnector input)
     {
@@ -60,8 +64,8 @@ public class WireManager : MonoBehaviour
                 lineRenderer.positionCount = 2;
                 lineRenderer.SetPosition(0, output.outPoint.position);
                 lineRenderer.SetPosition(1, input.inPoint.position);
-                lineRenderer.startWidth = 0.05f;
-                lineRenderer.endWidth = 0.05f;
+                lineRenderer.startWidth = 0.01f;
+                lineRenderer.endWidth = 0.01f;
 
                 Color wireColor = output.isOn ? Color.green : Color.red;
                 lineRenderer.startColor = wireColor;

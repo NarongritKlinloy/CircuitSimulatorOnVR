@@ -70,7 +70,7 @@ public class Clock : MonoBehaviour
                 output.isOn = isOn;
                 output.UpdateState(); // ส่งค่าออกไปยังวงจร
             }
-            Debug.Log("Clock Pulse: " + (isOn ? "ON" : "OFF")); // แสดงสถานะ Clock ใน Console
+            //Debug.Log("Clock Pulse: " + (isOn ? "ON" : "OFF")); // แสดงสถานะ Clock ใน Console
         }
     }
 
