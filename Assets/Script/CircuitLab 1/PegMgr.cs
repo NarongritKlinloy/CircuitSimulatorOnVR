@@ -58,7 +58,7 @@ public class PegMgr : MonoBehaviour, IPeg
 
             // Enable or keep colliders enabled to allow grabbing
             original.gameObject.GetComponent<BoxCollider>().enabled = true; // เปลี่ยนจาก false เป็น true
-            original.gameObject.GetComponent<SphereCollider>().enabled = false; // เปลี่ยนจาก false เป็น true
+            //original.gameObject.GetComponent<SphereCollider>().enabled = false; // เปลี่ยนจาก false เป็น true
 
             // Lock rotation to the nearest 90 degrees
             Point end = LockRotation(original, original);
