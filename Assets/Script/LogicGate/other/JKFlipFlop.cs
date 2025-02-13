@@ -20,6 +20,8 @@ public class JKFlipFlop : MonoBehaviour
     {
         if (clock == null || J == null || K == null || Q == null || Q_Not == null) return;
 
+        bool newQ = Q.isOn; // สำรองค่า Q ก่อนอัปเดต
+
         // ตรวจจับขอบขาขึ้น (rising edge) ของ Clock
         if (!lastClockState && clock.isOn)
         {
@@ -30,21 +32,22 @@ public class JKFlipFlop : MonoBehaviour
             else if (!J.isOn && K.isOn)
             {
                 // J = 0, K = 1 → Reset (Q = 0, Q' = 1)
-                Q.isOn = false;
-                Q_Not.isOn = true;
+                newQ = false;
             }
             else if (J.isOn && !K.isOn)
             {
                 // J = 1, K = 0 → Set (Q = 1, Q' = 0)
-                Q.isOn = true;
-                Q_Not.isOn = false;
+                newQ = true;
             }
             else if (J.isOn && K.isOn)
             {
                 // J = 1, K = 1 → Toggle (กลับค่า Q)
-                Q.isOn = !Q.isOn;
-                Q_Not.isOn = !Q_Not.isOn;
+                newQ = !Q.isOn;
             }
+
+            // อัปเดต Q และ Q' หลังจากคำนวณเสร็จ
+            Q.isOn = newQ;
+            Q_Not.isOn = !newQ;
 
             Q.UpdateState();
             Q_Not.UpdateState();

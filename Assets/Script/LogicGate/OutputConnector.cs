@@ -26,6 +26,10 @@ public class OutputConnector : MonoBehaviour
         renderer = GetComponent<Renderer>();
         UpdateColor();
     }
+    public bool IsConnected()
+    {
+        return connectedInputs.Count > 0; // ตรวจสอบว่ามี Input เชื่อมต่ออยู่หรือไม่
+    }
 
     void OnTriggerEnter(Collider other)
     {

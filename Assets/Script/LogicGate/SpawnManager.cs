@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class SpawnManager : MonoBehaviour
 {
@@ -21,11 +22,24 @@ public class SpawnManager : MonoBehaviour
     [Header("ตำแหน่งเกิดของ Object")]
     public Transform spawnPoint;
 
-    private void Spawn(GameObject prefab)
+    // เก็บตัวนับ ID ของแต่ละประเภท
+    private Dictionary<string, int> objectCount = new Dictionary<string, int>();
+
+    private void Spawn(GameObject prefab, string baseName)
     {
         if (prefab != null && spawnPoint != null)
         {
-            Instantiate(prefab, spawnPoint.position, Quaternion.identity);
+            GameObject newObj = Instantiate(prefab, spawnPoint.position, Quaternion.identity);
+
+            // เช็คว่า baseName มีการใช้หรือยัง ถ้ายังให้กำหนดค่าเริ่มต้นเป็น 1
+            if (!objectCount.ContainsKey(baseName))
+            {
+                objectCount[baseName] = 1;
+            }
+
+            // ตั้งชื่อให้กับ Object ที่ Spawn ออกมา
+            newObj.name = $"{baseName}_{objectCount[baseName]}";
+            objectCount[baseName]++; // เพิ่ม ID เพื่อป้องกันชื่อซ้ำ
         }
         else
         {
@@ -33,18 +47,18 @@ public class SpawnManager : MonoBehaviour
         }
     }
 
-    public void SpawnAndGate() { Spawn(andGatePrefab); }
-    public void SpawnOrGate() { Spawn(orGatePrefab); }
-    public void SpawnNorGate() { Spawn(norGatePrefab); }
-    public void SpawnNandGate() { Spawn(nandGatePrefab); }
-    public void SpawnXorGate() { Spawn(xorGatePrefab); }
-    public void SpawnXnorGate() { Spawn(xnorGatePrefab); }
-    public void SpawnNotGate() { Spawn(notGatePrefab); }
-    public void SpawnSevenSegment() { Spawn(sevenSegmentPrefab); }
-    public void SpawnToggleSwitch() { Spawn(toggleSwitchPrefab); }
-    public void SpawnBinarySwitch() { Spawn(binarySwitchPrefab); }
-    public void SpawnBuzzer() { Spawn(buzzerPrefab); }
-    public void SpawnClock() { Spawn(clockPrefab); }
-    public void SpawnJKFlipFlop() { Spawn(jkFlipFlopPrefab); }
-    public void SpawnLED() { Spawn(ledPrefab); }
+    public void SpawnAndGate() { Spawn(andGatePrefab, "AndGate"); }
+    public void SpawnOrGate() { Spawn(orGatePrefab, "OrGate"); }
+    public void SpawnNorGate() { Spawn(norGatePrefab, "NorGate"); }
+    public void SpawnNandGate() { Spawn(nandGatePrefab, "NandGate"); }
+    public void SpawnXorGate() { Spawn(xorGatePrefab, "XorGate"); }
+    public void SpawnXnorGate() { Spawn(xnorGatePrefab, "XnorGate"); }
+    public void SpawnNotGate() { Spawn(notGatePrefab, "NotGate"); }
+    public void SpawnSevenSegment() { Spawn(sevenSegmentPrefab, "SevenSegment"); }
+    public void SpawnToggleSwitch() { Spawn(toggleSwitchPrefab, "ToggleSwitch"); }
+    public void SpawnBinarySwitch() { Spawn(binarySwitchPrefab, "BinarySwitch"); }
+    public void SpawnBuzzer() { Spawn(buzzerPrefab, "Buzzer"); }
+    public void SpawnClock() { Spawn(clockPrefab, "Clock"); }
+    public void SpawnJKFlipFlop() { Spawn(jkFlipFlopPrefab, "JKFlipFlop"); }
+    public void SpawnLED() { Spawn(ledPrefab, "LED"); }
 }
