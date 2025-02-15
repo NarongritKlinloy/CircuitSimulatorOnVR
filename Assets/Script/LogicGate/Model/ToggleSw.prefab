@@ -250,6 +250,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isOn: 0
   outPoint: {fileID: 5168942396631424367}
+  outputID: 0
 --- !u!135 &2837209817518591816
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1116,8 +1117,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4282171903
+  m_fontColor: {r: 1, g: 0.75686276, b: 0.23529412, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

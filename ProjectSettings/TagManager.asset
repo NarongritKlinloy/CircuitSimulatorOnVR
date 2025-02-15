@@ -20,6 +20,7 @@ TagManager:
   - Structure
   - Box
   - NotGate
+  - Resistor
   layers:
   - Default
   - TransparentFX
