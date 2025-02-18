@@ -9,19 +9,21 @@ public class ToggleSwitch : MonoBehaviour
 
     private void Start()
     {
-        // ถ้ายังไม่มี OutputConnector ให้สร้างขึ้นใหม่
         if (output == null)
         {
-            output = gameObject.AddComponent<OutputConnector>(); // สร้างใหม่สำหรับแต่ละ ToggleSwitch
+            output = gameObject.AddComponent<OutputConnector>();
         }
 
         if (output != null)
         {
-            output.isOn = isOn; // ตั้งค่าสถานะเริ่มต้น
-            output.UpdateState(); // อัปเดตค่าทันที
+            output.isOn = isOn;
+            output.UpdateState();
+
+            // ตั้งชื่อให้ Output
+            output.gameObject.name = $"{gameObject.name}_OUT";
         }
 
-        UpdatePivotRotation(); // อัปเดตการหมุนของ pivot ทันทีที่เริ่มต้น
+        UpdatePivotRotation();
     }
 
 
@@ -37,11 +39,15 @@ public class ToggleSwitch : MonoBehaviour
         if (output != null)
         {
             output.isOn = isOn;
+            //Debug.Log($"🔄 ToggleSwitch {gameObject.name} กำลังส่งค่า {isOn} ไปยัง Output {output.gameObject.name}");
             output.UpdateState(); // อัปเดตค่าทุกจุดที่เชื่อมต่อ
+        }
+        else
+        {
+            Debug.Log($"⚠️ ToggleSwitch {gameObject.name} ไม่มี Output ที่เชื่อมต่อ");
         }
 
         UpdatePivotRotation(); // อัปเดตการหมุนของ pivot ทันที
-        //Debug.Log("Toggle Switch: " + (isOn ? "ON" : "OFF")); // แสดงสถานะใน Console
     }
 
     private void UpdatePivotRotation()

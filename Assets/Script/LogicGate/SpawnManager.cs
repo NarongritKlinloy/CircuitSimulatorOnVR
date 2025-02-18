@@ -19,13 +19,26 @@ public class SpawnManager : MonoBehaviour
     public GameObject jkFlipFlopPrefab;
     public GameObject ledPrefab;
 
-    [Header("ตำแหน่งเกิดของ Object")]
-    public Transform spawnPoint;
+    [Header("ตำแหน่งเกิดของ Object (แยกตามประเภท)")]
+    public Transform andGateSpawnPoint;
+    public Transform orGateSpawnPoint;
+    public Transform norGateSpawnPoint;
+    public Transform nandGateSpawnPoint;
+    public Transform xorGateSpawnPoint;
+    public Transform xnorGateSpawnPoint;
+    public Transform notGateSpawnPoint;
+    public Transform sevenSegmentSpawnPoint;
+    public Transform toggleSwitchSpawnPoint;
+    public Transform binarySwitchSpawnPoint;
+    public Transform buzzerSpawnPoint;
+    public Transform clockSpawnPoint;
+    public Transform jkFlipFlopSpawnPoint;
+    public Transform ledSpawnPoint;
 
     // เก็บตัวนับ ID ของแต่ละประเภท
     private Dictionary<string, int> objectCount = new Dictionary<string, int>();
 
-    private void Spawn(GameObject prefab, string baseName)
+    private void Spawn(GameObject prefab, Transform spawnPoint, string baseName)
     {
         if (prefab != null && spawnPoint != null)
         {
@@ -43,22 +56,22 @@ public class SpawnManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("Prefab หรือ Spawn Point ยังไม่ได้ตั้งค่า!");
+            Debug.LogWarning($"Prefab หรือ Spawn Point ของ {baseName} ยังไม่ได้ตั้งค่า!");
         }
     }
 
-    public void SpawnAndGate() { Spawn(andGatePrefab, "AndGate"); }
-    public void SpawnOrGate() { Spawn(orGatePrefab, "OrGate"); }
-    public void SpawnNorGate() { Spawn(norGatePrefab, "NorGate"); }
-    public void SpawnNandGate() { Spawn(nandGatePrefab, "NandGate"); }
-    public void SpawnXorGate() { Spawn(xorGatePrefab, "XorGate"); }
-    public void SpawnXnorGate() { Spawn(xnorGatePrefab, "XnorGate"); }
-    public void SpawnNotGate() { Spawn(notGatePrefab, "NotGate"); }
-    public void SpawnSevenSegment() { Spawn(sevenSegmentPrefab, "SevenSegment"); }
-    public void SpawnToggleSwitch() { Spawn(toggleSwitchPrefab, "ToggleSwitch"); }
-    public void SpawnBinarySwitch() { Spawn(binarySwitchPrefab, "BinarySwitch"); }
-    public void SpawnBuzzer() { Spawn(buzzerPrefab, "Buzzer"); }
-    public void SpawnClock() { Spawn(clockPrefab, "Clock"); }
-    public void SpawnJKFlipFlop() { Spawn(jkFlipFlopPrefab, "JKFlipFlop"); }
-    public void SpawnLED() { Spawn(ledPrefab, "LED"); }
+    public void SpawnAndGate() { Spawn(andGatePrefab, andGateSpawnPoint, "AndGate"); }
+    public void SpawnOrGate() { Spawn(orGatePrefab, orGateSpawnPoint, "OrGate"); }
+    public void SpawnNorGate() { Spawn(norGatePrefab, norGateSpawnPoint, "NorGate"); }
+    public void SpawnNandGate() { Spawn(nandGatePrefab, nandGateSpawnPoint, "NandGate"); }
+    public void SpawnXorGate() { Spawn(xorGatePrefab, xorGateSpawnPoint, "XorGate"); }
+    public void SpawnXnorGate() { Spawn(xnorGatePrefab, xnorGateSpawnPoint, "XnorGate"); }
+    public void SpawnNotGate() { Spawn(notGatePrefab, notGateSpawnPoint, "NotGate"); }
+    public void SpawnSevenSegment() { Spawn(sevenSegmentPrefab, sevenSegmentSpawnPoint, "SevenSegment"); }
+    public void SpawnToggleSwitch() { Spawn(toggleSwitchPrefab, toggleSwitchSpawnPoint, "ToggleSwitch"); }
+    public void SpawnBinarySwitch() { Spawn(binarySwitchPrefab, binarySwitchSpawnPoint, "BinarySwitch"); }
+    public void SpawnBuzzer() { Spawn(buzzerPrefab, buzzerSpawnPoint, "Buzzer"); }
+    public void SpawnClock() { Spawn(clockPrefab, clockSpawnPoint, "Clock"); }
+    public void SpawnJKFlipFlop() { Spawn(jkFlipFlopPrefab, jkFlipFlopSpawnPoint, "JKFlipFlop"); }
+    public void SpawnLED() { Spawn(ledPrefab, ledSpawnPoint, "LED"); }
 }

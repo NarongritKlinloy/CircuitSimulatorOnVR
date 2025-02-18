@@ -14,12 +14,12 @@ public class ChallengeManager1 : MonoBehaviour
     public bool requireNotGate = false;
 
     [Header("ตัวตรวจสอบผลลัพธ์")]
-    public LED ledToCheck; // LED ที่ต้องตรวจสอบ
+    public LED ledToCheck;
 
     [Header("UI สำหรับแสดงจำนวน ToggleSwitch (ถ้ามี)")]
-    public Text toggleSwitchCountText; // ตัวแปรสำหรับแสดงจำนวน ToggleSwitch บน UI
+    public Text toggleSwitchCountText;
 
-    private int score = 0; // ระบบคะแนน
+    private int score = 0;
 
     void Start()
     {
@@ -33,7 +33,6 @@ public class ChallengeManager1 : MonoBehaviour
 
     void UpdateUI()
     {
-        // อัปเดตค่าใน UI ถ้ามีการตั้งค่า Text
         int switchCount = FindObjectsOfType<ToggleSwitch>().Length;
         if (toggleSwitchCountText != null)
         {
@@ -44,63 +43,87 @@ public class ChallengeManager1 : MonoBehaviour
 
     void CheckChallengeCompletion()
     {
-        if (ledToCheck != null && ledToCheck.input != null)
+        if (ledToCheck == null || ledToCheck.input == null)
         {
-            bool isLEDOn = ledToCheck.input.isOn;
-
-            // ตรวจสอบว่า Logic Gate ที่จำเป็นมีอยู่จริงหรือไม่
-            bool isGateCorrect = CheckGatePresence();
-
-            // ตรวจสอบว่า Output ถูกต้องหรือไม่ โดยไม่สนใจเส้นทางที่เชื่อมต่อ
-            bool isOutputCorrect = isLEDOn;
-
-            // คำนวณคะแนน
-            score = CalculateScore(isOutputCorrect, isGateCorrect);
-
-            bool isComplete = isOutputCorrect && isGateCorrect;
-            Debug.Log(isComplete ? $"✅ โจทย์สำเร็จแล้ว! คะแนน: {score}" : $"❌ ยังไม่สำเร็จ คะแนน: {score}");
+            Debug.LogError("❌ LED หรือ input ของ LED เป็น null!");
+            return;
         }
+
+        bool isLEDOn = ledToCheck.input.isOn;
+        bool isGateCorrect = CheckGatePresence();
+        bool isLEDConnectedToCorrectGate = IsLEDConnectedToCorrectGate();
+        bool isOutputCorrect = isLEDOn && isLEDConnectedToCorrectGate;
+
+        score = CalculateScore(isOutputCorrect, isGateCorrect);
+
+        bool isComplete = isOutputCorrect && isGateCorrect;
+        Debug.Log(isComplete ? $"✅ โจทย์สำเร็จแล้ว! คะแนน: {score}" : $"❌ ยังไม่สำเร็จ คะแนน: {score}");
     }
 
     bool CheckGatePresence()
     {
-        int requiredGateCount = 0;
-        int foundGateCount = 0;
+        Dictionary<string, bool> requiredGates = new Dictionary<string, bool>
+        {
+            { "AndGate", requireAndGate },
+            { "OrGate", requireOrGate },
+            { "NandGate", requireNandGate },
+            { "NorGate", requireNorGate },
+            { "XorGate", requireXorGate },
+            { "XnorGate", requireXnorGate },
+            { "NotGate", requireNotGate }
+        };
 
-        if (requireAndGate) { requiredGateCount++; if (FindObjectsOfType<AndGate>().Length > 0) foundGateCount++; }
-        if (requireOrGate) { requiredGateCount++; if (FindObjectsOfType<OrGate>().Length > 0) foundGateCount++; }
-        if (requireNandGate) { requiredGateCount++; if (FindObjectsOfType<NandGate>().Length > 0) foundGateCount++; }
-        if (requireNorGate) { requiredGateCount++; if (FindObjectsOfType<NorGate>().Length > 0) foundGateCount++; }
-        if (requireXorGate) { requiredGateCount++; if (FindObjectsOfType<XorGate>().Length > 0) foundGateCount++; }
-        if (requireXnorGate) { requiredGateCount++; if (FindObjectsOfType<XnorGate>().Length > 0) foundGateCount++; }
-        if (requireNotGate) { requiredGateCount++; if (FindObjectsOfType<NotGate>().Length > 0) foundGateCount++; }
+        int requiredGateCount = 0, foundGateCount = 0;
 
-        // ถ้าไม่ได้กำหนดให้ต้องมี Gate ใด ๆ หรือมีบางตัวที่ถูกต้อง ให้ผ่าน
+        foreach (var gate in requiredGates)
+        {
+            if (gate.Value)
+            {
+                requiredGateCount++;
+                if (HasGateWithNumberedName(gate.Key)) foundGateCount++;
+            }
+        }
+
         return requiredGateCount == 0 || foundGateCount > 0;
+    }
+
+    bool HasGateWithNumberedName(string gateName)
+    {
+        GameObject[] gates = GameObject.FindGameObjectsWithTag("Gate");
+        foreach (GameObject gate in gates)
+        {
+            if (gate.name.StartsWith(gateName + "_"))
+            {
+                string suffix = gate.name.Substring(gateName.Length + 1);
+                if (int.TryParse(suffix, out _)) return true;
+            }
+        }
+        return false;
+    }
+
+    bool IsLEDConnectedToCorrectGate()
+    {
+        GameObject inputSource = ledToCheck.input.gameObject;
+        return inputSource != null && IsCorrectGateName(inputSource.name);
+    }
+
+    bool IsCorrectGateName(string name)
+    {
+        return (requireAndGate && name.StartsWith("AndGate_")) ||
+               (requireOrGate && name.StartsWith("OrGate_")) ||
+               (requireNandGate && name.StartsWith("NandGate_")) ||
+               (requireNorGate && name.StartsWith("NorGate_")) ||
+               (requireXorGate && name.StartsWith("XorGate_")) ||
+               (requireXnorGate && name.StartsWith("XnorGate_")) ||
+               (requireNotGate && name.StartsWith("NotGate_"));
     }
 
     int CalculateScore(bool isOutputCorrect, bool isGateCorrect)
     {
         int baseScore = 0;
-
-        if (isOutputCorrect)
-        {
-            baseScore += 30; // ถ้า Output ถูกต้องให้ 30 คะแนน
-        }
-        else
-        {
-            baseScore -= 10; // ถ้า Output ผิด หัก 10 คะแนน
-        }
-
-        if (isGateCorrect)
-        {
-            baseScore += 15; // ถ้ามี Logic Gate อย่างน้อยหนึ่งตัวจากรายการที่กำหนดให้ 15 คะแนน
-        }
-        else if (requireAndGate || requireOrGate || requireNandGate || requireNorGate || requireXorGate || requireXnorGate || requireNotGate)
-        {
-            baseScore -= 10; // ถ้าต้องใช้ Gate แต่ไม่มีตัวที่ถูกต้องเลย หัก 10 คะแนน
-        }
-
-        return Mathf.Max(0, baseScore); // ป้องกันคะแนนติดลบ
+        if (isOutputCorrect) baseScore += 30;
+        else baseScore -= 10;
+        if (isGateCorrect) baseScore += 15;
+        return Mathf.Max(0, baseScore);
     }
 }

@@ -23,6 +23,11 @@ public class Buzzer : MonoBehaviour
             }
         }
 
+        if (input != null)
+        {
+            input.gameObject.name = $"{gameObject.name}_IN";
+        }
+
         UpdateState();
     }
 

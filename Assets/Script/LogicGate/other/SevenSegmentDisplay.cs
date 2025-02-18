@@ -34,6 +34,16 @@ public class SevenSegmentDisplay : MonoBehaviour
         { 14, new bool[] { true, false, false, true, true, true, true } },
         { 15, new bool[] { true, false, false, false, true, true, true } }
     };
+    void Start()
+    {
+        for (int i = 0; i < inputs.Count; i++)
+        {
+            if (inputs[i] != null)
+            {
+                inputs[i].gameObject.name = $"{gameObject.name}_IN{i + 1}";
+            }
+        }
+    }
 
     void Update()
     {
