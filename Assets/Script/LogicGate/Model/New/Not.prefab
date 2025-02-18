@@ -336,13 +336,13 @@ GameObject:
   - component: {fileID: 1105114515683544238}
   - component: {fileID: 7744193988719209903}
   - component: {fileID: 5117467078042621443}
-  - component: {fileID: 293604505155710213}
+  - component: {fileID: 8623352497599050249}
   - component: {fileID: 761090819029447629}
   - component: {fileID: 6538639857515253401}
   - component: {fileID: 5769723954024971593}
   m_Layer: 0
   m_Name: Not
-  m_TagString: Untagged
+  m_TagString: Gate
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -416,7 +416,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &293604505155710213
+--- !u!114 &8623352497599050249
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -425,11 +425,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 5785026330957735817}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0068bb52aafe71049901bc9dc76d4f6a, type: 3}
+  m_Script: {fileID: 11500000, guid: d4d7f8e26391e4c4f809ea915b2e422c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inputs:
-  - {fileID: 536078026827275153}
+  input: {fileID: 536078026827275153}
   output: {fileID: 267551200760687939}
 --- !u!65 &761090819029447629
 BoxCollider:
@@ -475,7 +474,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0

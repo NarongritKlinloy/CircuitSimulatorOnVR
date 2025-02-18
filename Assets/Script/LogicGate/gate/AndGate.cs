@@ -12,7 +12,22 @@ public class AndGate : MonoBehaviour
         {
             input.AddAndGate(this);
         }
+
+        // ตั้งชื่อ Input และ Output
+        for (int i = 0; i < inputs.Count; i++)
+        {
+            if (inputs[i] != null)
+            {
+                inputs[i].gameObject.name = $"{gameObject.name}_IN{i + 1}";
+            }
+        }
+
+        if (output != null)
+        {
+            output.gameObject.name = $"{gameObject.name}_OUT";
+        }
     }
+
 
     void Update()
     {

@@ -21,6 +21,8 @@ TagManager:
   - Box
   - NotGate
   - Resistor
+  - Digital
+  - Exam
   layers:
   - Default
   - TransparentFX

@@ -16,7 +16,7 @@ public class LED : MonoBehaviour
     void Start()
     {
         ledRenderer = GetComponent<Renderer>();
-        
+
         if (targetObject != null)
         {
             targetRenderer = targetObject.GetComponent<Renderer>();
@@ -34,7 +34,12 @@ public class LED : MonoBehaviour
                 targetLight.color = Color.red; // ตั้งค่าให้แสงเป็นสีแดง
             }
         }
+        if (input != null)
+        {
+            input.gameObject.name = $"{gameObject.name}_IN";
+        }
 
+        UpdateState();
         UpdateState();
     }
 
