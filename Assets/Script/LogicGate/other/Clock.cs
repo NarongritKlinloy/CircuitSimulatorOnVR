@@ -44,7 +44,10 @@ public class Clock : MonoBehaviour
         if (output != null)
         {
             output.isOn = isOn;
-            output.UpdateState(); // อัปเดตค่าทันที
+            output.UpdateState();
+
+            // ตั้งชื่อให้ Output
+            output.gameObject.name = $"{gameObject.name}_OUT";
         }
 
         StartClock();

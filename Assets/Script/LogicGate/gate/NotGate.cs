@@ -12,7 +12,19 @@ public class NotGate : MonoBehaviour
         {
             input.AddNotGate(this);
         }
+
+        // ตั้งชื่อ Input และ Output
+        if (input != null)
+        {
+            input.gameObject.name = $"{gameObject.name}_IN";
+        }
+
+        if (output != null)
+        {
+            output.gameObject.name = $"{gameObject.name}_OUT";
+        }
     }
+
 
     void Update()
     {

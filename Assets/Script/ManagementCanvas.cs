@@ -11,45 +11,50 @@ public class ManagementCanvas : MonoBehaviour
     [Header("Object ที่จะเปิดเมื่อกดปุ่มที่ 2 ใน Mode Menu")]
     public GameObject mySpecialObject;
 
+    [Header("Object ที่จะเปิดเมื่อกดปุ่ม Simulator")]
+    public GameObject simulatorObject1;
+    public GameObject simulatorObject2;
+
     void Start()
     {
         ShowMainMenu(); // เริ่มต้นที่หน้าแรก
+        simulatorObject1.SetActive(true);
+        simulatorObject2.SetActive(true);
+    }
+
+    private void ResetAllMenus()
+    {
+        // รีเซ็ตค่าเริ่มต้นของแต่ละหน้า
+        mainMenu.SetActive(false);
+        secondMenu.SetActive(false);
+        modeMenu.SetActive(false);
+        saveMenu.SetActive(false);
+        mySpecialObject.SetActive(false);
+
     }
 
     public void ShowMainMenu()
     {
+        ResetAllMenus(); // รีเซ็ตก่อนเปิดหน้าใหม่
         mainMenu.SetActive(true);
-        secondMenu.SetActive(false);
-        modeMenu.SetActive(false);
-        saveMenu.SetActive(false);
-        mySpecialObject.SetActive(false);
     }
 
     public void ShowSecondMenu()
     {
-        mainMenu.SetActive(false);
+        ResetAllMenus();
         secondMenu.SetActive(true);
-        modeMenu.SetActive(false);
-        saveMenu.SetActive(false);
-        mySpecialObject.SetActive(false);
     }
 
     public void ShowModeMenu()
     {
-        mainMenu.SetActive(false);
-        secondMenu.SetActive(false);
+        ResetAllMenus();
         modeMenu.SetActive(true);
-        saveMenu.SetActive(false);
-        mySpecialObject.SetActive(false);
     }
 
     public void ShowSaveMenu()
     {
-        mainMenu.SetActive(false);
-        secondMenu.SetActive(false);
-        modeMenu.SetActive(false);
+        ResetAllMenus();
         saveMenu.SetActive(true);
-        mySpecialObject.SetActive(false);
     }
 
     //===================== ปุ่มต่าง ๆ ใน Mode Menu =====================//
@@ -58,24 +63,32 @@ public class ManagementCanvas : MonoBehaviour
     public void ModeMenuButton1()
     {
         Debug.Log("Mode Menu Button #1 Pressed (Do nothing yet)");
-        // ไว้เพิ่มเติมฟังก์ชันภายหลังได้
     }
 
-    // ปุ่มที่ 2: สั่งเปิด (หรือปิด) Object ที่ต้องการ
+    // ปุ่มที่ 2: เปิด mySpecialObject และปิดเมนูทั้งหมด
     public void ModeMenuButton2()
     {
-        mainMenu.SetActive(false);
-        secondMenu.SetActive(false);
-        modeMenu.SetActive(false);
-        saveMenu.SetActive(false);
+        ResetAllMenus();
         mySpecialObject.SetActive(true);
+        simulatorObject1.SetActive(true); // ปิด wall circuit 
+        simulatorObject2.SetActive(false); //เปิด wall digital
+
+
+    }
+
+    // ปุ่มที่ 3: เปิด simulatorObject1 และ simulatorObject2 แล้วกลับไป Mode Menu
+    public void ModeMenuButton3()
+    {
+        simulatorObject1.SetActive(false);
+        simulatorObject2.SetActive(false);
+        ShowModeMenu(); // กลับไปที่ Mode Menu
     }
 
     //===============================================================//
 
     public void ExitApplication()
     {
-        Debug.Log("Exit button pressed!"); // สำหรับ Debug ใน Unity Console
-        Application.Quit(); // ปิดแอป (ใช้ได้จริงตอนรันเป็น Build)
+        Debug.Log("Exit button pressed!");
+        Application.Quit();
     }
 }
