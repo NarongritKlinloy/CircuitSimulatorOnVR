@@ -30,10 +30,10 @@ public class InputConnector : MonoBehaviour
 
     //void OnMouseDown()
     //{
-    //if (wireManager != null)
-    //{
-    // wireManager.SelectInput(this);
-    // }
+    //    if (wireManager != null)
+    //    {
+    //        wireManager.SelectInput(this);
+    //    }
     //}
     void OnTriggerEnter(Collider other)
     {
@@ -65,7 +65,6 @@ public class InputConnector : MonoBehaviour
             connectedOutputs.Add(output);
             UpdateState();
         }
-
     }
     public void RemoveConnection(OutputConnector output)
     {
@@ -140,8 +139,42 @@ public class InputConnector : MonoBehaviour
         }
     }
 
+    // ฟังก์ชัน UpdateState() ที่ปรับปรุงใหม่
     public void UpdateState()
     {
+        // ถ้าไม่มี Output เชื่อมต่อ, ตั้งค่า isOn เป็น false แล้วอัปเดตส่วนที่เกี่ยวข้อง
+        if (connectedOutputs.Count == 0)
+        {
+            if (isOn != false)
+            {
+                isOn = false;
+                // อัปเดตให้ SevenSegmentDisplay
+                SevenSegmentDisplay display = FindObjectOfType<SevenSegmentDisplay>();
+                if (display != null)
+                {
+                    int binaryValue = display.GetCurrentValue();
+                    display.UpdateDisplay(binaryValue);
+                }
+                // อัปเดต LED และ Buzzer ถ้ามี
+                LED led = GetComponentInChildren<LED>();
+                if (led != null) led.UpdateState();
+                Buzzer buzzer = GetComponentInChildren<Buzzer>();
+                if (buzzer != null) buzzer.UpdateState();
+
+                // อัปเดตทุก Logic Gates ที่เชื่อมต่ออยู่
+                foreach (var gate in notGates) gate.UpdateState();
+                foreach (var gate in andGates) gate.UpdateState();
+                foreach (var gate in orGates) gate.UpdateState();
+                foreach (var gate in norGates) gate.UpdateState();
+                foreach (var gate in xorGates) gate.UpdateState();
+                foreach (var gate in nandGates) gate.UpdateState();
+                foreach (var gate in xnorGates) gate.UpdateState();
+                UpdateColor();
+            }
+            return;
+        }
+
+        // ถ้ามีการเชื่อมต่อ, คำนวณค่าใหม่จากสถานะของ Output ที่เชื่อมต่อ
         bool newState = false;
         foreach (var output in connectedOutputs)
         {
@@ -151,29 +184,23 @@ public class InputConnector : MonoBehaviour
                 break;
             }
         }
-        if (connectedOutputs.Count == 0) // ถ้าไม่มี Output เชื่อมต่อ ให้ค่าเป็น false
-        {
-            newState = false;
-        }
         if (isOn != newState)
         {
             isOn = newState;
-            // อัปเดตค่าให้ SevenSegmentDisplay
+            // อัปเดตให้ SevenSegmentDisplay
             SevenSegmentDisplay display = FindObjectOfType<SevenSegmentDisplay>();
             if (display != null)
             {
                 int binaryValue = display.GetCurrentValue();
                 display.UpdateDisplay(binaryValue);
-
             }
-            // อัปเดตค่าให้ LED และ Buzzer ถ้าหากมี
+            // อัปเดต LED และ Buzzer ถ้ามี
             LED led = GetComponentInChildren<LED>();
             if (led != null) led.UpdateState();
-
             Buzzer buzzer = GetComponentInChildren<Buzzer>();
             if (buzzer != null) buzzer.UpdateState();
 
-            // อัปเดตค่าให้ทุก Logic Gates ที่เชื่อมต่ออยู่
+            // อัปเดตทุก Logic Gates ที่เชื่อมต่ออยู่
             foreach (var gate in notGates) gate.UpdateState();
             foreach (var gate in andGates) gate.UpdateState();
             foreach (var gate in orGates) gate.UpdateState();
@@ -185,7 +212,6 @@ public class InputConnector : MonoBehaviour
         }
     }
 
-
     private void UpdateColor()
     {
         if (renderer != null)
@@ -193,5 +219,4 @@ public class InputConnector : MonoBehaviour
             renderer.material.color = isOn ? Color.green : Color.red;
         }
     }
-
 }

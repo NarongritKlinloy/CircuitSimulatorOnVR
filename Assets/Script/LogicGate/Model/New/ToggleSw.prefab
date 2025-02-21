@@ -712,6 +712,8 @@ MonoBehaviour:
   isOn: 0
   output: {fileID: 4023828321070161436}
   pivot: {fileID: 1711165782870042548}
+  toggleSound: {fileID: 8300000, guid: 914a37855dc66a14ba2158bab9f5cba1, type: 3}
+  toggleVolume: 1.98
 --- !u!65 &3551667147766958667
 BoxCollider:
   m_ObjectHideFlags: 0
