@@ -4,11 +4,29 @@ using System.Collections.Generic;
 public class WireManager : MonoBehaviour
 {
     public GameObject wirePrefab; // Prefab สำหรับสายไฟ
+
+    // เพิ่มตัวแปรสำหรับเสียง
+    [Header("เสียง")]
+    public AudioClip selectSound;  // เสียงเมื่อเลือกสายไฟ (Select)
+    public AudioClip removeSound;  // เสียงเมื่อสายไฟถูกลบ (Remove)
+    private AudioSource audioSource; // สำหรับเล่นเสียง
+
     private OutputConnector firstOutput = null; // เก็บ Output ที่ถูกคลิกตัวแรก
     private Dictionary<(OutputConnector, InputConnector), GameObject> wireConnections = new Dictionary<(OutputConnector, InputConnector), GameObject>(); // เก็บสายไฟที่เชื่อมต่อกัน
 
+    void Start()
+    {
+        // ตรวจสอบหรือเพิ่ม AudioSource ให้กับ GameObject นี้
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+    }
+
     void Update()
     {
+        // อัปเดตตำแหน่งและสีของสายไฟ
         foreach (var connection in wireConnections)
         {
             OutputConnector start = connection.Key.Item1;
@@ -27,6 +45,38 @@ public class WireManager : MonoBehaviour
                 }
             }
         }
+
+        // ตรวจสอบและลบสายไฟที่เชื่อมต่อกับอุปกรณ์ที่ถูกทำลายแล้ว (null)
+        List<(OutputConnector, InputConnector)> connectionsToRemove = new List<(OutputConnector, InputConnector)>();
+        foreach (var connection in wireConnections)
+        {
+            // Unity จะคืนค่าเป็น null หาก GameObject ถูกทำลายแล้ว
+            if (connection.Key.Item1 == null || connection.Key.Item2 == null)
+            {
+                connectionsToRemove.Add(connection.Key);
+            }
+        }
+        foreach (var key in connectionsToRemove)
+        {
+            if (wireConnections[key] != null)
+            {
+                // เล่นเสียงลบสายไฟก่อนทำลาย (ถ้ามี)
+                if (removeSound != null)
+                {
+                    audioSource.PlayOneShot(removeSound);
+                }
+                Destroy(wireConnections[key]);
+            }
+            // อัปเดตสถานะของ InputConnector ที่ยังมีอยู่
+            if (key.Item2 != null)
+            {
+                // ลบการเชื่อมต่อที่อ้างอิงถึง Output ที่ถูกทำลาย
+                key.Item2.RemoveConnection(key.Item1);
+                // เรียก UpdateState() เพื่อให้ InputConnector รีเซ็ตค่าเป็น false หากไม่มีการเชื่อมต่อ
+                key.Item2.UpdateState();
+            }
+            wireConnections.Remove(key);
+        }
     }
 
     public void SelectOutput(OutputConnector output)
@@ -35,6 +85,11 @@ public class WireManager : MonoBehaviour
         if (firstOutput == null)
         {
             firstOutput = output;
+            // เล่นเสียงเมื่อเลือก Output
+            if (selectSound != null)
+            {
+                audioSource.PlayOneShot(selectSound);
+            }
         }
     }
 
@@ -44,9 +99,15 @@ public class WireManager : MonoBehaviour
         {
             RemoveWire(input);
             CreateWire(firstOutput, input);
+            // เล่นเสียงเลือก (Select) อีกครั้งเมื่อเชื่อมต่อเสร็จ
+            if (selectSound != null)
+            {
+                audioSource.PlayOneShot(selectSound);
+            }
             firstOutput = null;
         }
     }
+
     public Dictionary<(OutputConnector, InputConnector), GameObject> GetWireConnections()
     {
         return wireConnections;
@@ -112,9 +173,20 @@ public class WireManager : MonoBehaviour
         foreach (var key in connectionsToRemove)
         {
             OutputConnector output = key.Item1;
-            output.RemoveConnection(input);
+            if (output != null)
+            {
+                output.RemoveConnection(input);
+            }
             input.ClearConnections();
-            Destroy(wireConnections[key]);
+            if (wireConnections[key] != null)
+            {
+                // เล่นเสียงลบสายไฟก่อนทำลาย (ถ้ามี)
+                if (removeSound != null)
+                {
+                    audioSource.PlayOneShot(removeSound);
+                }
+                Destroy(wireConnections[key]);
+            }
             wireConnections.Remove(key);
         }
 
