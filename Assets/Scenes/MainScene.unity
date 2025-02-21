@@ -33473,7 +33473,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7841679646455993023, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_Text
-      value: SIMULATOR
+      value: SAVE
       objectReference: {fileID: 0}
     - target: {fileID: 7841679646455993023, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_FontData.m_FontSize
@@ -37231,9 +37231,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7841679646455993023, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_Text
-      value: 'SAVE 2
-
-'
+      value: LOADSAVE
       objectReference: {fileID: 0}
     - target: {fileID: 7841679646455993023, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_FontData.m_FontSize
