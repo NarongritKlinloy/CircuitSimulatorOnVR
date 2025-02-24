@@ -8,7 +8,9 @@ public class SaveLoadManager2 : MonoBehaviour
     public float loadCooldown = 0.1f;
     private bool isLoading = false;
     private bool isSaving = false;
-
+    [SerializeField]
+    private string saveFileName = "saveFile.json"; // แสดงใน Inspector เพื่อแก้ไขชื่อไฟล์ได้
+    
     [System.Serializable]
     public class DeviceData
     {
@@ -49,7 +51,7 @@ public class SaveLoadManager2 : MonoBehaviour
 
     void Start()
     {
-        saveFilePath = Application.persistentDataPath + "/saveFile.json";
+        saveFilePath = Application.persistentDataPath + "/" + saveFileName;
 
         if (spawnManager != null)
         {
@@ -338,13 +340,13 @@ public class SaveLoadManager2 : MonoBehaviour
                     InputConnector inputCon = inputObj.GetComponent<InputConnector>();
                     if (outputCon != null && inputCon != null)
                     {
-                    
-                            Debug.Log("[LoadSequence] Simulating pinch for wire: " + wire.outputName + " -> " + wire.inputName);
-                            wireManager.SelectOutput(outputCon);
-                            yield return new WaitForSeconds(0.05f);
-                            wireManager.SelectInput(inputCon);
-                            Debug.Log("[LoadSequence] Wire created for: " + wire.outputName + " -> " + wire.inputName);
-                    
+
+                        Debug.Log("[LoadSequence] Simulating pinch for wire: " + wire.outputName + " -> " + wire.inputName);
+                        wireManager.SelectOutput(outputCon);
+                        yield return new WaitForSeconds(0.05f);
+                        wireManager.SelectInput(inputCon);
+                        Debug.Log("[LoadSequence] Wire created for: " + wire.outputName + " -> " + wire.inputName);
+
 
                     }
                     else
