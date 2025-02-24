@@ -3,10 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
-// SaveLoadManager2.cs
-// จัดการการบันทึกและโหลดข้อมูลของอุปกรณ์ (ตำแหน่ง, การหมุน, สถานะ และการเชื่อมต่อสายไฟ)
-// โดยใช้ข้อมูลจาก SpawnManager และ WireManager
-
 public class SaveLoadManager2 : MonoBehaviour
 {
     public float loadCooldown = 0.1f;
@@ -41,7 +37,7 @@ public class SaveLoadManager2 : MonoBehaviour
     public SpawnManager spawnManager;
     public WireManager wireManager;
 
-    // รายชื่อประเภทของอุปกรณ์ที่ถูก Spawn
+    // รายชื่ออุปกรณ์ที่ต้องการจัดการ
     public string[] deviceTypes = new string[] {
         "AndGate", "OrGate", "NorGate", "NandGate", "XorGate", "XnorGate", "NotGate",
         "SevenSegment", "ToggleSwitch", "BinarySwitch", "Buzzer", "Clock", "JKFlipFlop", "LED"
@@ -57,7 +53,7 @@ public class SaveLoadManager2 : MonoBehaviour
 
         if (spawnManager != null)
         {
-            // แมป Prefab กับชนิดอุปกรณ์
+            // แมป Prefab
             prefabMapping["AndGate"] = spawnManager.andGatePrefab;
             prefabMapping["OrGate"] = spawnManager.orGatePrefab;
             prefabMapping["NorGate"] = spawnManager.norGatePrefab;
@@ -73,7 +69,7 @@ public class SaveLoadManager2 : MonoBehaviour
             prefabMapping["JKFlipFlop"] = spawnManager.jkFlipFlopPrefab;
             prefabMapping["LED"] = spawnManager.ledPrefab;
 
-            // แมป SpawnPoint กับชนิดอุปกรณ์ (หากต้องการ)
+            // แมป SpawnPoint (หากต้องการ)
             spawnPointMapping["AndGate"] = spawnManager.andGateSpawnPoint;
             spawnPointMapping["OrGate"] = spawnManager.orGateSpawnPoint;
             spawnPointMapping["NorGate"] = spawnManager.norGateSpawnPoint;
@@ -105,7 +101,7 @@ public class SaveLoadManager2 : MonoBehaviour
     }
 
     /// <summary>
-    /// เรียกฟังก์ชั่น Save แบบหน่วงเวลา 3 วินาที
+    /// เรียก Save แบบหน่วงเวลา 3 วินาที
     /// </summary>
     public void Save()
     {
@@ -125,12 +121,11 @@ public class SaveLoadManager2 : MonoBehaviour
         SaveData saveData = new SaveData();
         GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
 
-        // เก็บข้อมูลอุปกรณ์ (หลัก)
+        // เก็บข้อมูลอุปกรณ์หลัก (ชื่อไม่ประกอบด้วย _IN / _OUT)
         foreach (GameObject obj in allObjects)
         {
             foreach (string type in deviceTypes)
             {
-                // เฉพาะอุปกรณ์หลักที่ชื่อเริ่มด้วย type + "_" และไม่ประกอบด้วย "_IN" หรือ "_OUT"
                 if (obj.name.StartsWith(type + "_") &&
                     !obj.name.Contains("_IN") && !obj.name.Contains("_OUT"))
                 {
@@ -140,6 +135,7 @@ public class SaveLoadManager2 : MonoBehaviour
                     data.position = obj.transform.position;
                     data.rotation = obj.transform.rotation;
 
+                    // ถ้าเป็น ToggleSwitch ก็เซฟสถานะ toggle
                     var toggle = obj.GetComponent<ToggleSwitch>();
                     if (toggle != null)
                     {
@@ -150,10 +146,8 @@ public class SaveLoadManager2 : MonoBehaviour
                         bool state = false;
                         var input = obj.GetComponent<InputConnector>();
                         var output = obj.GetComponent<OutputConnector>();
-                        if (input != null)
-                            state = input.isOn;
-                        else if (output != null)
-                            state = output.isOn;
+                        if (input != null) state = input.isOn;
+                        else if (output != null) state = output.isOn;
                         data.state = state;
                     }
                     saveData.devices.Add(data);
@@ -162,19 +156,17 @@ public class SaveLoadManager2 : MonoBehaviour
             }
         }
 
-        // Debug: แสดงจำนวนสายไฟใน WireManager
+        // เก็บข้อมูลสายไฟ โดยใช้ชื่อ Child Connector
         var wireDict = wireManager.GetWireConnections();
         Debug.Log("[Save] Number of wires in dictionary: " + wireDict.Count);
 
-        // เก็บข้อมูลสายไฟ (Child Connector)
         foreach (var connection in wireDict)
         {
             if (connection.Key.Item1 != null && connection.Key.Item2 != null)
             {
-                // ใช้ชื่อ Child Connector จริง ๆ (เช่น "ToggleSwitch_1_OUT1", "AndGate_1_IN2")
                 WireData wireData = new WireData();
-                wireData.outputName = connection.Key.Item1.gameObject.name;
-                wireData.inputName = connection.Key.Item2.gameObject.name;
+                wireData.outputName = connection.Key.Item1.gameObject.name; // เช่น "AndGate_1_OUT1"
+                wireData.inputName = connection.Key.Item2.gameObject.name; // เช่น "AndGate_2_IN1"
                 wireData.isConnected = true;
                 saveData.wires.Add(wireData);
             }
@@ -183,7 +175,6 @@ public class SaveLoadManager2 : MonoBehaviour
         Debug.Log("[Save] Total devices saved: " + saveData.devices.Count);
         Debug.Log("[Save] Total wires saved: " + saveData.wires.Count);
 
-        // เขียนไฟล์ JSON
         string json = JsonUtility.ToJson(saveData, true);
         File.WriteAllText(saveFilePath, json);
         Debug.Log("[Save] Saved data to " + saveFilePath);
@@ -192,7 +183,7 @@ public class SaveLoadManager2 : MonoBehaviour
     }
 
     /// <summary>
-    /// เรียกฟังก์ชั่น Load แบบหน่วงเวลา 3 วินาที
+    /// เรียก Load แบบหน่วงเวลา 3 วินาที
     /// </summary>
     public void Load()
     {
@@ -214,7 +205,6 @@ public class SaveLoadManager2 : MonoBehaviour
     {
         yield return Wait();
 
-        // อ่านไฟล์ JSON
         string json = File.ReadAllText(saveFilePath);
         SaveData saveData = JsonUtility.FromJson<SaveData>(json);
 
@@ -225,7 +215,7 @@ public class SaveLoadManager2 : MonoBehaviour
             Debug.Log($"[Load] wire => output={w.outputName}, input={w.inputName}, isConnected={w.isConnected}");
         }
 
-        // ลบอุปกรณ์เก่าที่มีชื่อขึ้นต้นด้วย deviceType + "_"
+        // ลบอุปกรณ์เก่า
         GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
         foreach (GameObject obj in allObjects)
         {
@@ -245,16 +235,14 @@ public class SaveLoadManager2 : MonoBehaviour
         isLoading = false;
     }
 
-    /// <summary>
-    /// รอเวลา 3 วินาที
-    /// </summary>
     public IEnumerator Wait()
     {
         yield return new WaitForSeconds(3f);
     }
 
     /// <summary>
-    /// สร้างอุปกรณ์ตามข้อมูลที่เซฟไว้ แล้วจำลองการ pinch เพื่อสร้างสายไฟ
+    /// แก้ปัญหา “ชื่อซ้ำหรือไม่ตรงกัน” โดยตั้งชื่อ Child Connector ให้ตรงกับที่เซฟไว้
+    /// แล้วบันทึกลง loadedObjects เพื่อ simulate pinch ได้
     /// </summary>
     private IEnumerator LoadSequence(SaveData saveData)
     {
@@ -265,14 +253,14 @@ public class SaveLoadManager2 : MonoBehaviour
         {
             if (prefabMapping.ContainsKey(data.deviceType))
             {
-                // สร้างอุปกรณ์
                 GameObject prefab = prefabMapping[data.deviceType];
                 GameObject newObj = Instantiate(prefab, data.position, data.rotation);
+                // ชื่ออุปกรณ์หลัก เช่น "ToggleSwitch_1" หรือ "AndGate_1"
                 newObj.name = data.objectName;
 
                 Debug.Log("[LoadSequence] Loaded device: " + data.objectName);
 
-                // ตั้งค่าสถานะ (isOn)
+                // ตั้งค่า state พื้นฐาน
                 var input = newObj.GetComponent<InputConnector>();
                 var output = newObj.GetComponent<OutputConnector>();
                 if (input != null)
@@ -286,7 +274,7 @@ public class SaveLoadManager2 : MonoBehaviour
                     output.UpdateState();
                 }
 
-                // ถ้าเป็น ToggleSwitch ให้หมุน pivot ให้ตรง
+                // ถ้าเป็น ToggleSwitch ก็อาจมี pivot ให้หมุน
                 var toggle = newObj.GetComponent<ToggleSwitch>();
                 if (toggle != null)
                 {
@@ -299,39 +287,33 @@ public class SaveLoadManager2 : MonoBehaviour
                     }
                 }
 
-                // 1) หาชื่อ Child Connector (OutputConnector / InputConnector หลายตัว)
-                // 2) ตั้งชื่อให้ตรงกับที่เคยตั้งตอนเซฟ (ถ้าต้องการ)
-                //    หรือใช้ index ช่วยนับ เช่น out1, out2, in1, in2
-                // 3) บันทึกลง loadedObjects ด้วยชื่อเดียวกัน
+                // **ส่วนแก้ไข**: ตั้งชื่อ Child Connector ตามที่ไฟล์ JSON ระบุ
+                // ตัวอย่าง: JSON บอกว่า "ToggleSwitch_1_OUT"
+                // คุณทราบว่าถ้าเป็น ToggleSwitch จะมี 1 outputConnector
+                // ก็ให้ชื่อ = <objectName>_OUT (เช่น "ToggleSwitch_1_OUT")
 
-                // ตัวอย่าง (สมมติ prefab มี 1 output, 2 input)
-                // ถ้าคุณต้องการตั้งชื่อเอง เช่น AndGate_1_OUT, AndGate_1_IN1, AndGate_1_IN2
-                int outIndex = 1;
+                // หา OutputConnector ทั้งหมด
                 var outConnectors = newObj.GetComponentsInChildren<OutputConnector>();
-                foreach (var oc in outConnectors)
+                // สมมติ ToggleSwitch มี 1 output
+                // ตั้งชื่อเป็น <parentName>_OUT => "ToggleSwitch_1_OUT"
+                if (outConnectors.Length > 0)
                 {
-                    // สมมติให้ชื่อเป็น <parentName>_OUT<index>
-                    string outName = $"{data.objectName}_OUT{outIndex}";
-                    oc.gameObject.name = outName;
-                    loadedObjects[outName] = oc.gameObject;
-                    outIndex++;
+                    outConnectors[0].gameObject.name = data.objectName + "_OUT";
+                    loadedObjects[outConnectors[0].gameObject.name] = outConnectors[0].gameObject;
                 }
 
-                int inIndex = 1;
+                // ถ้าเป็น AndGate ที่มี 2 input => "AndGate_1_IN1" / "AndGate_1_IN2"
+                // เช่นกัน หา InputConnector ทั้งหมด
                 var inConnectors = newObj.GetComponentsInChildren<InputConnector>();
-                foreach (var ic in inConnectors)
+                // ตั้งชื่อ input ตัวแรกเป็น <parentName>_IN1, ตัวที่สองเป็น <parentName>_IN2
+                for (int i = 0; i < inConnectors.Length; i++)
                 {
-                    string inName = $"{data.objectName}_IN{inIndex}";
-                    ic.gameObject.name = inName;
-                    loadedObjects[inName] = ic.gameObject;
-                    inIndex++;
+                    string inName = data.objectName + "_IN" + (i + 1);
+                    inConnectors[i].gameObject.name = inName;
+                    loadedObjects[inName] = inConnectors[i].gameObject;
                 }
 
-                // นอกจากนี้ ถ้าอุปกรณ์ไม่มี child connector แต่ใช้ตัวเดียวกัน
-                // (เช่น ToggleSwitch มี OutputConnector ติดอยู่ที่ root)
-                // ก็อาจใช้ logic คล้ายๆ กัน
-
-                // สุดท้าย บันทึก root object เผื่อใช้งาน
+                // บันทึกตัวหลักด้วย
                 loadedObjects[data.objectName] = newObj;
             }
             else
@@ -341,7 +323,7 @@ public class SaveLoadManager2 : MonoBehaviour
             yield return new WaitForSeconds(loadCooldown);
         }
 
-        // โหลดสายไฟโดยใช้ simulate pinch
+        // สร้างสายไฟด้วย simulate pinch
         foreach (WireData wire in saveData.wires)
         {
             if (wire.isConnected)
@@ -356,11 +338,14 @@ public class SaveLoadManager2 : MonoBehaviour
                     InputConnector inputCon = inputObj.GetComponent<InputConnector>();
                     if (outputCon != null && inputCon != null)
                     {
-                        Debug.Log("[LoadSequence] Simulating pinch for wire: " + wire.outputName + " -> " + wire.inputName);
-                        wireManager.SelectOutput(outputCon);
-                        yield return new WaitForSeconds(0.05f);
-                        wireManager.SelectInput(inputCon);
-                        Debug.Log("[LoadSequence] Wire created for: " + wire.outputName + " -> " + wire.inputName);
+                    
+                            Debug.Log("[LoadSequence] Simulating pinch for wire: " + wire.outputName + " -> " + wire.inputName);
+                            wireManager.SelectOutput(outputCon);
+                            yield return new WaitForSeconds(0.05f);
+                            wireManager.SelectInput(inputCon);
+                            Debug.Log("[LoadSequence] Wire created for: " + wire.outputName + " -> " + wire.inputName);
+                    
+
                     }
                     else
                     {
@@ -379,4 +364,5 @@ public class SaveLoadManager2 : MonoBehaviour
             yield return new WaitForSeconds(loadCooldown);
         }
     }
+
 }
