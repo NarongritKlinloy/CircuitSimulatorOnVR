@@ -140,6 +140,17 @@ public class QuizManager2 : MonoBehaviour
         resultMessage = $"คะแนนรวม: {scoreAccumulated} / {GetMaxScore()}\n\nรายละเอียด:\n{messageBuilder}";
         Debug.Log(resultMessage);
     }
+    public void SubmitScore()
+    {
+        // เรียกตรวจสอบโจทย์ทั้งหมดก่อนส่งคะแนน
+        CheckAllTasks();
+
+        // แสดงคะแนนรวมใน Console
+        Debug.Log("คะแนนที่ส่ง: " + totalScore);
+
+        // หากคุณมี UI Text สำหรับแสดงผลคะแนน สามารถอัปเดตที่นี่ได้ เช่น:
+        // scoreText.text = "คะแนนที่ส่ง: " + totalScore;
+    }
 
     // -----------------------------
     // 5) บังคับอัปเดตวงจร

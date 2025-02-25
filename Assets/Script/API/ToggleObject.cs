@@ -60,7 +60,7 @@ public class ToggleObjects : MonoBehaviour
                 bool isOpen = (response.practice_status == 1);
                 item.targetObject.SetActive(isOpen);
 
-                Debug.Log($"Practice {response.practice_id} => Status: {response.practice_status} => Active={isOpen}");
+                //Debug.Log($"Practice {response.practice_id} => Status: {response.practice_status} => Active={isOpen}");
 
                 // อัปเดตชื่อและรายละเอียดของ practice
                 if (item.nameText != null)
@@ -74,7 +74,7 @@ public class ToggleObjects : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"Error calling {finalUrl}: {www.error}");
+                //Debug.LogError($"Error calling {finalUrl}: {www.error}");
             }
         }
     }

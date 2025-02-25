@@ -1,28 +1,16 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Networking; // สำหรับ UnityWebRequest
-using System.Text;           // สำหรับ Encoding
-using System.IO;            // (จะยังคงใช้อยู่หากมีการอ้างอิงอื่น ๆ)
-using System;               // สำหรับ Serializable
-using System.Linq;
+using System.IO;
 
-public class SaveLoadManager2 : MonoBehaviour
+public class SaveLoadPractics : MonoBehaviour
 {
     public float loadCooldown = 0.1f;
     private bool isLoading = false;
     private bool isSaving = false;
-
     [SerializeField]
-    private string saveFileName = "saveFileDigital.json"; 
-    // ^ ไม่ได้ใช้งานแล้ว (เราจะไม่เซฟไฟล์) แต่จะยังคงไว้ไม่ให้กระทบ Inspector เดิม
-
-    // เพิ่ม URL สำหรับเรียก API
-    // สมมติว่าตัว server.js รันที่ http://localhost:5000
-    // และเราสร้าง endpoint เป็น /api/simulator/save / /api/simulator/load
-    private string apiSaveUrl = "http://localhost:5000/api/simulator/save";
-    private string apiLoadUrl = "http://localhost:5000/api/simulator/load";
-
+    private string saveFileName = "saveFilePractice.json"; // แสดงใน Inspector เพื่อแก้ไขชื่อไฟล์ได้
+    
     [System.Serializable]
     public class DeviceData
     {
@@ -48,27 +36,6 @@ public class SaveLoadManager2 : MonoBehaviour
         public List<WireData> wires = new List<WireData>();
     }
 
-    [Serializable]
-    public class ServerSaveRequest
-    {
-        public string userId;
-        public string saveJson;
-    }
-
-    [Serializable]
-    public class ServerSaveResponse
-    {
-        public string message;
-        public long insertId; // ถ้าต้องการทราบค่า insertId ที่ DB สร้าง
-    }
-
-    [Serializable]
-    public class ServerLoadResponse
-    {
-        public string message;
-        public string saveJson; 
-    }
-
     public SpawnManager spawnManager;
     public WireManager wireManager;
 
@@ -78,12 +45,14 @@ public class SaveLoadManager2 : MonoBehaviour
         "SevenSegment", "ToggleSwitch", "BinarySwitch", "Buzzer", "Clock", "JKFlipFlop", "LED"
     };
 
-    // ใช้ mapping prefab / spawnPoint ตามเดิม
+    private string saveFilePath;
     private Dictionary<string, GameObject> prefabMapping = new Dictionary<string, GameObject>();
     private Dictionary<string, Transform> spawnPointMapping = new Dictionary<string, Transform>();
 
     void Start()
     {
+        saveFilePath = Application.persistentDataPath + "/" + saveFileName;
+
         if (spawnManager != null)
         {
             // แมป Prefab
@@ -102,7 +71,7 @@ public class SaveLoadManager2 : MonoBehaviour
             prefabMapping["JKFlipFlop"] = spawnManager.jkFlipFlopPrefab;
             prefabMapping["LED"] = spawnManager.ledPrefab;
 
-            // แมป SpawnPoint
+            // แมป SpawnPoint (หากต้องการ)
             spawnPointMapping["AndGate"] = spawnManager.andGateSpawnPoint;
             spawnPointMapping["OrGate"] = spawnManager.orGateSpawnPoint;
             spawnPointMapping["NorGate"] = spawnManager.norGateSpawnPoint;
@@ -148,10 +117,9 @@ public class SaveLoadManager2 : MonoBehaviour
 
     private IEnumerator DelayedSave()
     {
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(1.5f);
         isSaving = true;
 
-        // เตรียมข้อมูล SaveData
         SaveData saveData = new SaveData();
         GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
 
@@ -199,8 +167,8 @@ public class SaveLoadManager2 : MonoBehaviour
             if (connection.Key.Item1 != null && connection.Key.Item2 != null)
             {
                 WireData wireData = new WireData();
-                wireData.outputName = connection.Key.Item1.gameObject.name; 
-                wireData.inputName = connection.Key.Item2.gameObject.name;  
+                wireData.outputName = connection.Key.Item1.gameObject.name; // เช่น "AndGate_1_OUT1"
+                wireData.inputName = connection.Key.Item2.gameObject.name; // เช่น "AndGate_2_IN1"
                 wireData.isConnected = true;
                 saveData.wires.Add(wireData);
             }
@@ -209,8 +177,9 @@ public class SaveLoadManager2 : MonoBehaviour
         Debug.Log("[Save] Total devices saved: " + saveData.devices.Count);
         Debug.Log("[Save] Total wires saved: " + saveData.wires.Count);
 
-        // เรียก coroutine เซฟขึ้น Database
-        yield return StartCoroutine(SaveToDatabaseCoroutine(saveData));
+        string json = JsonUtility.ToJson(saveData, true);
+        File.WriteAllText(saveFilePath, json);
+        Debug.Log("[Save] Saved data to " + saveFilePath);
 
         isSaving = false;
     }
@@ -225,132 +194,30 @@ public class SaveLoadManager2 : MonoBehaviour
             Debug.LogWarning("Load operation is already in progress.");
             return;
         }
+        if (!File.Exists(saveFilePath))
+        {
+            Debug.LogError("Save file not found: " + saveFilePath);
+            return;
+        }
         isLoading = true;
         StartCoroutine(DelayedLoad());
     }
 
     private IEnumerator DelayedLoad()
     {
-        // รอ 3 วินาที (หรือ loadCooldown)
-        yield return new WaitForSeconds(3f);
+        yield return Wait();
 
-        // เรียก Coroutine Load จาก DB
-        yield return StartCoroutine(LoadFromDatabaseCoroutine());
+        string json = File.ReadAllText(saveFilePath);
+        SaveData saveData = JsonUtility.FromJson<SaveData>(json);
 
-        isLoading = false;
-    }
-
-    /// <summary>
-    /// สร้าง Coroutine สำหรับเซฟลง DB (POST /api/simulator/save)
-    /// </summary>
-    private IEnumerator SaveToDatabaseCoroutine(SaveData saveData)
-    {
-        // 1) แปลง saveData เป็น JSON
-        string json = JsonUtility.ToJson(saveData, true);
-
-        // 2) เตรียม userId จาก PlayerPrefs (ต้องมาจาก GoogleAuthen หรือ WebSocketManager)
-        string userId = PlayerPrefs.GetString("userId", "unknown");
-        if (string.IsNullOrEmpty(userId) || userId == "unknown")
+        Debug.Log($"[Load] Read file: {saveFilePath}");
+        Debug.Log($"[Load] Devices in file: {saveData.devices.Count}, Wires in file: {saveData.wires.Count}");
+        foreach (var w in saveData.wires)
         {
-            Debug.LogWarning("No valid userId found in PlayerPrefs. Save might not work properly.");
+            Debug.Log($"[Load] wire => output={w.outputName}, input={w.inputName}, isConnected={w.isConnected}");
         }
 
-        // 3) สร้าง payload สำหรับส่งไป server
-        ServerSaveRequest requestBody = new ServerSaveRequest {
-            userId = userId,
-            saveJson = json
-        };
-        string bodyJsonString = JsonUtility.ToJson(requestBody);
-        byte[] bodyRaw = Encoding.UTF8.GetBytes(bodyJsonString);
-
-        // 4) ใช้ UnityWebRequest (POST)
-        using (UnityWebRequest request = new UnityWebRequest(apiSaveUrl, "POST"))
-        {
-            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
-
-            yield return request.SendWebRequest();
-
-            if (request.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogError("Save to DB failed: " + request.error);
-            }
-            else
-            {
-                Debug.Log("[SaveToDatabase] Success => " + request.downloadHandler.text);
-                // ถ้าต้องการอ่านค่า insertId หรืออื่น ๆ ก็ deserialize ได้
-                ServerSaveResponse serverResp = JsonUtility.FromJson<ServerSaveResponse>(request.downloadHandler.text);
-                if (serverResp != null)
-                {
-                    Debug.Log("Server message: " + serverResp.message + ", insertId: " + serverResp.insertId);
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// สร้าง Coroutine สำหรับโหลดจาก DB (GET /api/simulator/load?userId=xxx)
-    /// </summary>
-    private IEnumerator LoadFromDatabaseCoroutine()
-    {
-        // 1) ดึง userId จาก PlayerPrefs
-        string userId = PlayerPrefs.GetString("userId", "unknown");
-        if (string.IsNullOrEmpty(userId) || userId == "unknown")
-        {
-            Debug.LogError("No userId found. Cannot load data from DB.");
-            yield break;
-        }
-
-        // 2) ต่อ query string ?userId=xxx
-        string urlWithParam = apiLoadUrl + "?userId=" + userId;
-
-        using (UnityWebRequest request = UnityWebRequest.Get(urlWithParam))
-        {
-            yield return request.SendWebRequest();
-
-            if (request.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogError("Load from DB failed: " + request.error);
-                yield break;
-            }
-            else
-            {
-                // ตัวอย่าง JSON ที่ได้กลับมา:
-                // {
-                //   "message": "Load success",
-                //   "saveJson": "{ \"devices\": [...], \"wires\": [...] }"
-                // }
-                Debug.Log("[LoadFromDatabase] Success => " + request.downloadHandler.text);
-                ServerLoadResponse serverResp = JsonUtility.FromJson<ServerLoadResponse>(request.downloadHandler.text);
-                if (serverResp == null || string.IsNullOrEmpty(serverResp.saveJson))
-                {
-                    Debug.LogWarning("No save data returned from server.");
-                    yield break;
-                }
-
-                // แปลง JSON จาก server มาเป็น SaveData
-                SaveData saveData = JsonUtility.FromJson<SaveData>(serverResp.saveJson);
-                if (saveData == null)
-                {
-                    Debug.LogError("Failed to parse saveJson into SaveData");
-                    yield break;
-                }
-
-                // ก่อน instantiate อุปกรณ์ใหม่ ต้องลบอุปกรณ์เก่า
-                ClearCurrentDevices();
-
-                // จากนั้น Instantiate อุปกรณ์ตาม saveData
-                yield return StartCoroutine(LoadSequence(saveData));
-            }
-        }
-    }
-
-    /// <summary>
-    /// ลบ GameObject ของอุปกรณ์ที่เคยมีอยู่ทั้งหมด ก่อนโหลดชุดใหม่
-    /// </summary>
-    private void ClearCurrentDevices()
-    {
+        // ลบอุปกรณ์เก่า
         GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
         foreach (GameObject obj in allObjects)
         {
@@ -363,10 +230,21 @@ public class SaveLoadManager2 : MonoBehaviour
                 }
             }
         }
+        yield return new WaitForSeconds(0.1f);
+
+        // โหลดอุปกรณ์และสายไฟ
+        yield return StartCoroutine(LoadSequence(saveData));
+        isLoading = false;
+    }
+
+    public IEnumerator Wait()
+    {
+        yield return new WaitForSeconds(3f);
     }
 
     /// <summary>
-    /// โหลดอุปกรณ์ + สายไฟ จาก SaveData ที่ได้มา
+    /// แก้ปัญหา “ชื่อซ้ำหรือไม่ตรงกัน” โดยตั้งชื่อ Child Connector ให้ตรงกับที่เซฟไว้
+    /// แล้วบันทึกลง loadedObjects เพื่อ simulate pinch ได้
     /// </summary>
     private IEnumerator LoadSequence(SaveData saveData)
     {
@@ -379,9 +257,12 @@ public class SaveLoadManager2 : MonoBehaviour
             {
                 GameObject prefab = prefabMapping[data.deviceType];
                 GameObject newObj = Instantiate(prefab, data.position, data.rotation);
+                // ชื่ออุปกรณ์หลัก เช่น "ToggleSwitch_1" หรือ "AndGate_1"
                 newObj.name = data.objectName;
 
-                // ตั้งค่า state
+                Debug.Log("[LoadSequence] Loaded device: " + data.objectName);
+
+                // ตั้งค่า state พื้นฐาน
                 var input = newObj.GetComponent<InputConnector>();
                 var output = newObj.GetComponent<OutputConnector>();
                 if (input != null)
@@ -395,7 +276,7 @@ public class SaveLoadManager2 : MonoBehaviour
                     output.UpdateState();
                 }
 
-                // ToggleSwitch
+                // ถ้าเป็น ToggleSwitch ก็อาจมี pivot ให้หมุน
                 var toggle = newObj.GetComponent<ToggleSwitch>();
                 if (toggle != null)
                 {
@@ -408,17 +289,25 @@ public class SaveLoadManager2 : MonoBehaviour
                     }
                 }
 
-                // ตั้งชื่อ Child Connector ให้ตรงกับ JSON
+                // **ส่วนแก้ไข**: ตั้งชื่อ Child Connector ตามที่ไฟล์ JSON ระบุ
+                // ตัวอย่าง: JSON บอกว่า "ToggleSwitch_1_OUT"
+                // คุณทราบว่าถ้าเป็น ToggleSwitch จะมี 1 outputConnector
+                // ก็ให้ชื่อ = <objectName>_OUT (เช่น "ToggleSwitch_1_OUT")
+
+                // หา OutputConnector ทั้งหมด
                 var outConnectors = newObj.GetComponentsInChildren<OutputConnector>();
+                // สมมติ ToggleSwitch มี 1 output
+                // ตั้งชื่อเป็น <parentName>_OUT => "ToggleSwitch_1_OUT"
                 if (outConnectors.Length > 0)
                 {
-                    // ถ้าเป็น ToggleSwitch มี 1 output
-                    // อาจตั้งเป็น <parentName>_OUT
                     outConnectors[0].gameObject.name = data.objectName + "_OUT";
                     loadedObjects[outConnectors[0].gameObject.name] = outConnectors[0].gameObject;
                 }
 
+                // ถ้าเป็น AndGate ที่มี 2 input => "AndGate_1_IN1" / "AndGate_1_IN2"
+                // เช่นกัน หา InputConnector ทั้งหมด
                 var inConnectors = newObj.GetComponentsInChildren<InputConnector>();
+                // ตั้งชื่อ input ตัวแรกเป็น <parentName>_IN1, ตัวที่สองเป็น <parentName>_IN2
                 for (int i = 0; i < inConnectors.Length; i++)
                 {
                     string inName = data.objectName + "_IN" + (i + 1);
@@ -426,6 +315,7 @@ public class SaveLoadManager2 : MonoBehaviour
                     loadedObjects[inName] = inConnectors[i].gameObject;
                 }
 
+                // บันทึกตัวหลักด้วย
                 loadedObjects[data.objectName] = newObj;
             }
             else
@@ -435,26 +325,46 @@ public class SaveLoadManager2 : MonoBehaviour
             yield return new WaitForSeconds(loadCooldown);
         }
 
-        // สร้างสายไฟด้วยการ simulate pinch
+        // สร้างสายไฟด้วย simulate pinch
         foreach (WireData wire in saveData.wires)
         {
             if (wire.isConnected)
             {
+                Debug.Log($"[LoadSequence] Processing wire: {wire.outputName} -> {wire.inputName}");
                 if (loadedObjects.ContainsKey(wire.outputName) && loadedObjects.ContainsKey(wire.inputName))
                 {
+                    Debug.Log("[LoadSequence] Found devices for wire connection: " + wire.outputName + " -> " + wire.inputName);
                     GameObject outputObj = loadedObjects[wire.outputName];
                     GameObject inputObj = loadedObjects[wire.inputName];
                     OutputConnector outputCon = outputObj.GetComponent<OutputConnector>();
                     InputConnector inputCon = inputObj.GetComponent<InputConnector>();
                     if (outputCon != null && inputCon != null)
                     {
+
+                        Debug.Log("[LoadSequence] Simulating pinch for wire: " + wire.outputName + " -> " + wire.inputName);
                         wireManager.SelectOutput(outputCon);
                         yield return new WaitForSeconds(0.05f);
                         wireManager.SelectInput(inputCon);
+                        Debug.Log("[LoadSequence] Wire created for: " + wire.outputName + " -> " + wire.inputName);
+
+
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[LoadSequence] Missing connector components for wire: " + wire.outputName + " -> " + wire.inputName);
                     }
                 }
+                else
+                {
+                    Debug.LogWarning("[LoadSequence] Could not find devices for wire connection: " + wire.outputName + " -> " + wire.inputName);
+                }
+            }
+            else
+            {
+                Debug.Log($"[LoadSequence] Wire isConnected=false for: {wire.outputName} -> {wire.inputName}");
             }
             yield return new WaitForSeconds(loadCooldown);
         }
     }
+
 }

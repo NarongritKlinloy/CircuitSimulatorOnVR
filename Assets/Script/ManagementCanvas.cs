@@ -3,12 +3,13 @@ using UnityEngine;
 public class ManagementCanvas : MonoBehaviour
 {
     [Header("เมนูหลักแต่ละหน้า")]
+    public GameObject LoginGoogle;
     public GameObject mainMenu;   // หน้าแรก
     public GameObject secondMenu; // หน้าที่ 2
     public GameObject modeMenu;   // หน้าที่ 3
     public GameObject saveMenu;   // หน้าที่ 4
 
-    public GameObject Mannual;   // หน้าที่ 5
+    public GameObject Mannual;    // หน้าที่ 5
 
     [Header("Object ที่จะเปิดเมื่อกดปุ่มที่ 2 ใน Mode Menu")]
     public GameObject mySpecialObject;
@@ -19,51 +20,65 @@ public class ManagementCanvas : MonoBehaviour
 
     void Start()
     {
-        ShowMainMenu(); // เริ่มต้นที่หน้าแรก
-        simulatorObject1.SetActive(true);
-        simulatorObject2.SetActive(true);
+        ShowLoginGoogle(); // เริ่มต้นที่หน้าแรก
+        if (simulatorObject1 != null)
+            simulatorObject1.SetActive(true);
+        if (simulatorObject2 != null)
+            simulatorObject2.SetActive(true);
     }
 
     private void ResetAllMenus()
     {
-        // รีเซ็ตค่าเริ่มต้นของแต่ละหน้า
-        mainMenu.SetActive(false);
-        secondMenu.SetActive(false);
-        modeMenu.SetActive(false);
-        saveMenu.SetActive(false);
-        mySpecialObject.SetActive(false);
-        Mannual.SetActive(false);
-
+        // รีเซ็ตค่าเริ่มต้นของแต่ละหน้า โดยตรวจสอบ null ก่อนเรียก SetActive()
+        if (LoginGoogle != null) LoginGoogle.SetActive(false);
+        if (mainMenu != null) mainMenu.SetActive(false);
+        if (secondMenu != null) secondMenu.SetActive(false);
+        if (modeMenu != null) modeMenu.SetActive(false);
+        if (saveMenu != null) saveMenu.SetActive(false);
+        if (mySpecialObject != null) mySpecialObject.SetActive(false);
+        if (Mannual != null) Mannual.SetActive(false);
     }
-
+    
     public void ShowMainMenu()
     {
         ResetAllMenus(); // รีเซ็ตก่อนเปิดหน้าใหม่
-        mainMenu.SetActive(true);
+        if (mainMenu != null)
+            mainMenu.SetActive(true);
+    }
+    
+    public void ShowLoginGoogle()
+    {
+        ResetAllMenus(); // รีเซ็ตก่อนเปิดหน้าใหม่
+        if (LoginGoogle != null)
+            LoginGoogle.SetActive(true);
     }
 
     public void ShowSecondMenu()
     {
         ResetAllMenus();
-        secondMenu.SetActive(true);
+        if (secondMenu != null)
+            secondMenu.SetActive(true);
     }
 
     public void ShowModeMenu()
     {
         ResetAllMenus();
-        modeMenu.SetActive(true);
+        if (modeMenu != null)
+            modeMenu.SetActive(true);
     }
 
     public void ShowSaveMenu()
     {
         ResetAllMenus();
-        saveMenu.SetActive(true);
+        if (saveMenu != null)
+            saveMenu.SetActive(true);
     }
 
-     public void ShowManual()
+    public void ShowManual()
     {
         ResetAllMenus();
-        Mannual.SetActive(true);
+        if (Mannual != null)
+            Mannual.SetActive(true);
     }
 
     //===================== ปุ่มต่าง ๆ ใน Mode Menu =====================//
@@ -78,18 +93,21 @@ public class ManagementCanvas : MonoBehaviour
     public void ModeMenuButton2()
     {
         ResetAllMenus();
-        mySpecialObject.SetActive(true);
-        simulatorObject1.SetActive(true); // ปิด wall circuit 
-        simulatorObject2.SetActive(false); //เปิด wall digital
-
-
+        if (mySpecialObject != null)
+            mySpecialObject.SetActive(true);
+        if (simulatorObject1 != null)
+            simulatorObject1.SetActive(true); // ปิด wall circuit 
+        if (simulatorObject2 != null)
+            simulatorObject2.SetActive(false); // เปิด wall digital
     }
 
     // ปุ่มที่ 3: เปิด simulatorObject1 และ simulatorObject2 แล้วกลับไป Mode Menu
     public void ModeMenuButton3()
     {
-        simulatorObject1.SetActive(false);
-        simulatorObject2.SetActive(false);
+        if (simulatorObject1 != null)
+            simulatorObject1.SetActive(false);
+        if (simulatorObject2 != null)
+            simulatorObject2.SetActive(false);
         ShowModeMenu(); // กลับไปที่ Mode Menu
     }
 
@@ -100,4 +118,4 @@ public class ManagementCanvas : MonoBehaviour
         Debug.Log("Exit button pressed!");
         Application.Quit();
     }
-}
+} 
