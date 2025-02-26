@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.IO;
+using UnityEngine.Networking; // สำหรับ UnityWebRequest
+using System.Text;
 
 [System.Serializable]
 public class DeviceState
@@ -29,12 +30,44 @@ public class SaveData
     public List<DeviceState> deviceStates;
 }
 
+[System.Serializable]
+public class ServerSaveRequest
+{
+    public string userId;
+    public string saveJson;
+    public int save_type;
+}
+
+[System.Serializable]
+public class ServerSaveResponse
+{
+    public string message;
+    public long insertId;
+    public string simulateName;
+}
+
+[System.Serializable]
+public class ServerLoadResponse
+{
+    public string message;
+    public SaveData saveJson;
+    public string simulateName;
+    public string simulateDate;
+}
+
 public class SaveManager : MonoBehaviour
 {
-    public string fileName = "savegame.json";
     public GameObject[] availablePrefabs;
     private int numSpawned = 1;
     private CircuitLab circuitLab;
+
+    // URL สำหรับ API
+    public string apiSaveUrl = "http://localhost:5000/api/simulator/save";
+    public string apiLoadUrl = "http://localhost:5000/api/simulator/load";
+    public string apiLoadByIdUrl = "http://localhost:5000/api/simulator/loadById";
+    public int saveTypeCircuit = 1; // กำหนดประเภทการเซฟ (ถ้ามีการใช้งาน)
+
+    private bool isLoading = false;
 
     void Start()
     {
@@ -49,6 +82,7 @@ public class SaveManager : MonoBehaviour
         }
     }
 
+    // SaveGame จะรวบรวมข้อมูลจาก PlacedComponent ใน CircuitLab แล้วส่งข้อมูลไปยัง API
     public void SaveGame()
     {
         SaveData data = new SaveData();
@@ -87,31 +121,182 @@ public class SaveManager : MonoBehaviour
             }
         }
 
+        // ส่งข้อมูลไปยัง API แทนการเซฟลงเครื่อง
+        StartCoroutine(SaveToDatabaseCoroutine(data));
+    }
+
+    private IEnumerator SaveToDatabaseCoroutine(SaveData data)
+    {
         string json = JsonUtility.ToJson(data, true);
-        string path = Path.Combine(Application.persistentDataPath, fileName);
-        File.WriteAllText(path, json);
-        Debug.Log("บันทึกข้อมูลสำเร็จ: " + path);
+        string userId = PlayerPrefs.GetString("userId", "unknown");
+        if (string.IsNullOrEmpty(userId) || userId == "unknown")
+        {
+            Debug.LogWarning("ไม่พบ userId ที่ถูกต้องใน PlayerPrefs");
+        }
+
+        ServerSaveRequest requestBody = new ServerSaveRequest
+        {
+            userId = userId,
+            saveJson = json,
+            save_type = this.saveTypeCircuit
+        };
+
+        string bodyJsonString = JsonUtility.ToJson(requestBody);
+        byte[] bodyRaw = Encoding.UTF8.GetBytes(bodyJsonString);
+
+        using (UnityWebRequest request = new UnityWebRequest(apiSaveUrl, "POST"))
+        {
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError("Save to DB failed: " + request.error);
+            }
+            else
+            {
+                Debug.Log("[SaveToDatabase] Success => " + request.downloadHandler.text);
+                ServerSaveResponse serverResp = JsonUtility.FromJson<ServerSaveResponse>(request.downloadHandler.text);
+                if (serverResp != null)
+                {
+                    Debug.Log("Server message: " + serverResp.message +
+                              ", insertId: " + serverResp.insertId +
+                              ", simulateName: " + serverResp.simulateName);
+                }
+            }
+        }
+    }
+
+    // LoadGame ดึงข้อมูลจาก API (apiLoadUrl) แล้วทำการลบอุปกรณ์เก่าก่อนโหลดข้อมูลใหม่
+    public void LoadGame()
+    {
+        if (isLoading)
+        {
+            Debug.LogWarning("Load operation is already in progress.");
+            return;
+        }
+        isLoading = true;
+        StartCoroutine(LoadFromDatabaseCoroutine());
+    }
+
+    private IEnumerator LoadFromDatabaseCoroutine()
+    {
+        string userId = PlayerPrefs.GetString("userId", "unknown");
+        if (string.IsNullOrEmpty(userId) || userId == "unknown")
+        {
+            Debug.LogError("ไม่พบ userId สำหรับดึงข้อมูลจาก DB");
+            yield break;
+        }
+
+        string urlWithParam = apiLoadUrl + "?userId=" + userId;
+        using (UnityWebRequest request = UnityWebRequest.Get(urlWithParam))
+        {
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError("Load from DB failed: " + request.error);
+                isLoading = false;
+                yield break;
+            }
+            else
+            {
+                Debug.Log("[LoadFromDatabase] => " + request.downloadHandler.text);
+                ServerLoadResponse serverResp = JsonUtility.FromJson<ServerLoadResponse>(request.downloadHandler.text);
+                if (serverResp == null || serverResp.saveJson == null)
+                {
+                    Debug.LogWarning("ไม่พบข้อมูล save จาก server");
+                    isLoading = false;
+                    yield break;
+                }
+
+                SaveData saveData = serverResp.saveJson;
+                // ลบอุปกรณ์เก่าก่อนโหลด
+                ClearCurrentDevices();
+                yield return StartCoroutine(ResetAndLoad(saveData));
+                isLoading = false;
+            }
+        }
+    }
+
+    // ฟังก์ชัน Load โดยใช้ saveId ผ่าน apiLoadByIdUrl
+    public void LoadGameById(long saveId)
+    {
+        if (isLoading)
+        {
+            Debug.LogWarning("Load operation is already in progress.");
+            return;
+        }
+        isLoading = true;
+        StartCoroutine(LoadByIdCoroutine(saveId));
+    }
+
+    private IEnumerator LoadByIdCoroutine(long saveId)
+    {
+        string userId = PlayerPrefs.GetString("userId", "unknown");
+        if (string.IsNullOrEmpty(userId) || userId == "unknown")
+        {
+            Debug.LogError("ไม่พบ userId สำหรับดึงข้อมูลจาก DB");
+            isLoading = false;
+            yield break;
+        }
+
+        string urlWithParam = apiLoadByIdUrl + "?userId=" + userId + "&saveId=" + saveId;
+        using (UnityWebRequest request = UnityWebRequest.Get(urlWithParam))
+        {
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError("Load from DB (by ID) failed: " + request.error);
+                isLoading = false;
+                yield break;
+            }
+
+            Debug.Log("[LoadById] => " + request.downloadHandler.text);
+            ServerLoadResponse serverResp = JsonUtility.FromJson<ServerLoadResponse>(request.downloadHandler.text);
+
+            if (serverResp == null || serverResp.saveJson == null)
+            {
+                Debug.LogWarning("ไม่พบข้อมูล save จาก server สำหรับ saveId=" + saveId);
+                isLoading = false;
+                yield break;
+            }
+
+            SaveData saveData = serverResp.saveJson;
+            if (saveData == null)
+            {
+                Debug.LogError("ไม่สามารถแปลงข้อมูล saveJson");
+                isLoading = false;
+                yield break;
+            }
+
+            ClearCurrentDevices();
+            yield return StartCoroutine(ResetAndLoad(saveData));
+            isLoading = false;
+        }
+    }
+
+    // ลบอุปกรณ์ปัจจุบันทั้งหมดที่มีใน CircuitLab
+    private void ClearCurrentDevices()
+    {
+        List<PlacedComponent> currentComponents = circuitLab.GetPlacedComponents();
+        foreach (PlacedComponent comp in currentComponents)
+        {
+            if (comp.GameObject != null)
+            {
+                Destroy(comp.GameObject);
+            }
+        }
     }
 
     public IEnumerator ResetAndWait()
     {
         circuitLab.Reset();
         yield return new WaitForSeconds(3f);
-    }
-
-    public void LoadGame()
-    {
-        string path = Path.Combine(Application.persistentDataPath, fileName);
-        if (File.Exists(path))
-        {
-            string json = File.ReadAllText(path);
-            SaveData data = JsonUtility.FromJson<SaveData>(json);
-            StartCoroutine(ResetAndLoad(data));
-        }
-        else
-        {
-            Debug.LogWarning("ไม่พบไฟล์ save: " + path);
-        }
     }
 
     private IEnumerator ResetAndLoad(SaveData data)

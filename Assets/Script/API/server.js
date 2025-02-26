@@ -295,7 +295,7 @@ app.get("/api/simulator/load", async (req, res) => {
 });
 
 // -----------------------------------------------------------
-// (ใหม่) Endpoint สำหรับ "รายชื่อเซฟทั้งหมด" ของ user
+// (ใหม่) Endpoint สำหรับ SaveDigital
 app.get("/api/simulator/listSavesDigital", async (req, res) => {
   try {
     const { userId } = req.query;
@@ -306,6 +306,27 @@ app.get("/api/simulator/listSavesDigital", async (req, res) => {
       SELECT simulate_id, simulate_name, simulate_date
       FROM SimulatorSave
       WHERE UID = ? AND save_type = 0
+      ORDER BY simulate_date DESC
+    `;
+    const [rows] = await db.query(sql, [userId]);
+    return res.json(rows);
+  } catch (error) {
+    console.error("Error listing simulator data:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// (ใหม่) Endpoint สำหรับ SaveCircuit
+app.get("/api/simulator/listSavesCitcuit", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ error: "No userId provided" });
+    }
+    const sql = `
+      SELECT simulate_id, simulate_name, simulate_date
+      FROM SimulatorSave
+      WHERE UID = ? AND save_type = 1
       ORDER BY simulate_date DESC
     `;
     const [rows] = await db.query(sql, [userId]);
