@@ -153,24 +153,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// -----------------------------------------------------------
-// ตัวอย่าง Endpoint อื่น ๆ (ย่อ)
-app.get("/api/practice/:id", async (req, res) => {
-  const { id } = req.params;
-  const sql = "SELECT practice_id, practice_status FROM practice WHERE practice_id = ?";
-  try {
-    const [results] = await db.query(sql, [id]);
-    if (!results.length) {
-      return res.status(404).json({ error: "practice_id not found" });
-    }
-    return res.json({
-      practice_id: results[0].practice_id,
-      practice_status: results[0].practice_status,
-    });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-});
+
 
 app.post("/api/save", async (req, res) => {
   const saveData = req.body;
@@ -187,7 +170,10 @@ app.post("/api/save", async (req, res) => {
     }
 
     let practiceJson = "{}";
-    if (saveData.practiceData && typeof saveData.practiceData.json === "string") {
+    if (
+      saveData.practiceData &&
+      typeof saveData.practiceData.json === "string"
+    ) {
       if (saveData.practiceData.json.trim().length > 0) {
         practiceJson = saveData.practiceData.json;
       }
@@ -199,7 +185,12 @@ app.post("/api/save", async (req, res) => {
       INSERT INTO practice_save (uid, practice_id, submit_date, score, practice_json)
       VALUES (?, ?, NOW(), ?, ?)
     `;
-    const [result] = await db.query(sql, [userId, practiceId, score, practiceJson]);
+    const [result] = await db.query(sql, [
+      userId,
+      practiceId,
+      score,
+      practiceJson,
+    ]);
 
     console.log(`Save data inserted with id: ${result.insertId}`);
     res.json({
@@ -230,13 +221,14 @@ app.get("/api/load", async (req, res) => {
 // Endpoint สำหรับเซฟข้อมูล Simulator (INSERT)
 app.post("/api/simulator/save", async (req, res) => {
   try {
-    const { userId, saveJson } = req.body;
+    const { userId, saveJson, save_type } = req.body;
     if (!userId || !saveJson) {
       return res.status(400).json({ error: "userId or saveJson is missing" });
     }
-
+   
     // นับจำนวน row เฉพาะ userId นี้ เพื่อจะตั้งชื่อ "Save X"
-    const getCountSql = "SELECT COUNT(*) AS userSaves FROM SimulatorSave WHERE UID = ?";
+    const getCountSql =
+      "SELECT COUNT(*) AS userSaves FROM SimulatorSave WHERE UID = ?";
     const [countRows] = await db.query(getCountSql, [userId]);
     const newIndex = countRows[0].userSaves + 1;
 
@@ -245,10 +237,15 @@ app.post("/api/simulator/save", async (req, res) => {
 
     // INSERT ลงตาราง
     const sql = `
-      INSERT INTO SimulatorSave (UID, save_digital, simulate_date, simulate_name)
-      VALUES (?, ?, NOW(), ?)
+      INSERT INTO SimulatorSave (UID, save_json, simulate_date, simulate_name ,save_type)
+      VALUES (?, ?, NOW(), ? , ?)
     `;
-    const [result] = await db.query(sql, [userId, saveJson, simulateName]);
+    const [result] = await db.query(sql, [
+      userId,
+      saveJson,
+      simulateName,
+      save_type,
+    ]);
 
     return res.json({
       message: "Data saved successfully",
@@ -280,12 +277,14 @@ app.get("/api/simulator/load", async (req, res) => {
     const [rows] = await db.query(sql, [userId]);
 
     if (!rows.length) {
-      return res.status(404).json({ error: "No save data found for this user" });
+      return res
+        .status(404)
+        .json({ error: "No save data found for this user" });
     }
 
     return res.json({
       message: "Load success",
-      saveJson: rows[0].save_digital,
+      saveJson: rows[0].save_json,
       simulateName: rows[0].simulate_name, // เช่น "Save 1"
       simulateDate: rows[0].simulate_date,
     });
@@ -297,7 +296,7 @@ app.get("/api/simulator/load", async (req, res) => {
 
 // -----------------------------------------------------------
 // (ใหม่) Endpoint สำหรับ "รายชื่อเซฟทั้งหมด" ของ user
-app.get("/api/simulator/listSaves", async (req, res) => {
+app.get("/api/simulator/listSavesDigital", async (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) {
@@ -306,7 +305,7 @@ app.get("/api/simulator/listSaves", async (req, res) => {
     const sql = `
       SELECT simulate_id, simulate_name, simulate_date
       FROM SimulatorSave
-      WHERE UID = ?
+      WHERE UID = ? AND save_type = 0
       ORDER BY simulate_date DESC
     `;
     const [rows] = await db.query(sql, [userId]);
@@ -338,7 +337,7 @@ app.get("/api/simulator/loadById", async (req, res) => {
 
     return res.json({
       message: "Load success",
-      saveJson: rows[0].save_digital,
+      saveJson: rows[0].save_json,
       simulateName: rows[0].simulate_name,
       simulateDate: rows[0].simulate_date,
     });
@@ -362,7 +361,9 @@ app.delete("/api/simulator/deleteById", async (req, res) => {
     if (result.affectedRows === 0) {
       return res
         .status(404)
-        .json({ error: "No save data found or it doesn't belong to this user" });
+        .json({
+          error: "No save data found or it doesn't belong to this user",
+        });
     }
 
     return res.json({ message: "Delete success" });
@@ -371,6 +372,31 @@ app.delete("/api/simulator/deleteById", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+
+
+ 
+app.get("/api/practice/find/:uid", async (req, res) => {
+  const { uid } = req.params;
+  try {
+    const sql_find_classroom = `
+      SELECT p.practice_id, p.practice_name, p.practice_detail, cp.practice_status 
+      FROM enrollment AS enroll 
+      JOIN classroom_practice AS cp 
+      JOIN practice AS p 
+        ON enroll.class_id = cp.class_id 
+        AND cp.practice_id = p.practice_id 
+      WHERE enroll.uid = ?
+    `;
+    
+    const [rows] = await db.query(sql_find_classroom, [uid]);
+    return res.status(200).json(rows);
+  } catch (error) {
+    console.error("Error selecting classroom practice data: ", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+
 
 // เริ่มเซิร์ฟเวอร์
 server.listen(PORT, () => {

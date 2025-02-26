@@ -1,12 +1,12 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
-using TMPro; // ใช้สำหรับแสดงข้อความบน UI
+using TMPro;
 
 public class ToggleObjects : MonoBehaviour
 {
-    [Header("URL ของ API (ไม่ต้องต่อท้าย ID)")]
-    public string apiUrl = "http://localhost:5000/api/practice/";
+    [Header("URL ของ API (ไม่ต้องต่อท้าย UID)")]
+    public string apiUrl = "http://localhost:5000/api/practice/find/";
 
     [Header("ช่วงเวลาที่จะเช็คซ้ำ (วินาที)")]
     public float pollingInterval = 5f;
@@ -15,39 +15,53 @@ public class ToggleObjects : MonoBehaviour
     [System.Serializable]
     public class ToggleItem
     {
-        public GameObject targetObject;  // อ้างอิง GameObject ที่จะเปิด/ปิด
-        public int practiceId;           // ID ที่จะดึงจากฐานข้อมูล
-        public TextMeshProUGUI nameText; // UI Text สำหรับแสดงชื่อ
-        public TextMeshProUGUI detailText; // UI Text สำหรับแสดงรายละเอียด
+        public GameObject targetObject;       // Object ที่จะเปิด/ปิด
+        public int practiceId;                // ID ที่จะใช้จับคู่กับข้อมูลที่ได้รับจาก API
+        public TextMeshProUGUI nameText;      // สำหรับแสดงชื่อ practice
+        public TextMeshProUGUI detailText;    // สำหรับแสดงรายละเอียด practice
     }
 
     [Header("รายการ Object ที่ต้องการ Toggle")]
-    public ToggleItem[] toggleItems; // เก็บชุด (Object, PracticeID) หลายตัว
+    public ToggleItem[] toggleItems;          // ตั้งค่าใน Inspector
+
+    // โครงสร้างข้อมูลที่รับมาจาก API
+    [System.Serializable]
+    public class PracticeFindData
+    {
+        public int practice_id;
+        public string practice_name;
+        public string practice_detail;
+        public int practice_status;
+    }
 
     void Start()
     {
-        // เริ่ม Coroutine ที่จะเช็คสถานะทุก ๆ pollingInterval วินาที
-        StartCoroutine(CheckAllObjectsLoop());
+        // ดึง userId จาก PlayerPrefs ที่ถูกเซ็ตไว้จาก GoogleAuthen หรือ WebSocketManager
+        string storedUserId = PlayerPrefs.GetString("userId", "unknown");
+
+        if (string.IsNullOrEmpty(storedUserId) || storedUserId == "unknown")
+        {
+            Debug.LogWarning("No valid userId in PlayerPrefs. ToggleObjects won't fetch data.");
+            return;
+        }
+
+        // เริ่ม Coroutine ตรวจสอบ practice ทุก pollingInterval วินาที
+        StartCoroutine(CheckAllPracticesLoop(storedUserId));
     }
 
-    // ลูปหลัก: เรียกเช็คสถานะของทุก Item แล้วรอ pollingInterval ก่อนทำใหม่
-    IEnumerator CheckAllObjectsLoop()
+    IEnumerator CheckAllPracticesLoop(string userId)
     {
         while (true)
         {
-            foreach (var item in toggleItems)
-            {
-                yield return StartCoroutine(GetPracticeStatus(item));
-            }
-
+            yield return StartCoroutine(GetAllPracticeData(userId));
             yield return new WaitForSeconds(pollingInterval);
         }
     }
 
-    IEnumerator GetPracticeStatus(ToggleItem item)
+    IEnumerator GetAllPracticeData(string userId)
     {
-        string finalUrl = apiUrl + item.practiceId;
-
+        // ใช้ EscapeURL เพื่อ encode userId ที่อาจมีอักขระพิเศษ เช่น @
+        string finalUrl = apiUrl + UnityWebRequest.EscapeURL(userId);
         using (UnityWebRequest www = UnityWebRequest.Get(finalUrl))
         {
             yield return www.SendWebRequest();
@@ -55,37 +69,62 @@ public class ToggleObjects : MonoBehaviour
             if (www.result == UnityWebRequest.Result.Success)
             {
                 string json = www.downloadHandler.text;
-                PracticeStatusResponse response = JsonUtility.FromJson<PracticeStatusResponse>(json);
+                // Parse JSON Array ด้วย JsonHelper (เพราะ Unity JsonUtility ไม่รองรับ Array โดยตรง)
+                PracticeFindData[] dataArray = JsonHelper.FromJson<PracticeFindData>(json);
 
-                bool isOpen = (response.practice_status == 1);
-                item.targetObject.SetActive(isOpen);
-
-                //Debug.Log($"Practice {response.practice_id} => Status: {response.practice_status} => Active={isOpen}");
-
-                // อัปเดตชื่อและรายละเอียดของ practice
-                if (item.nameText != null)
+                if (dataArray != null)
                 {
-                    item.nameText.text = response.practice_name;
-                }
-                if (item.detailText != null)
-                {
-                    item.detailText.text = response.practice_detail;
+                    // สำหรับแต่ละข้อมูล practice ที่ได้รับจาก API
+                    foreach (var pd in dataArray)
+                    {
+                        // วน loop เช็คกับแต่ละ ToggleItem ที่กำหนดไว้ใน Inspector
+                        foreach (var item in toggleItems)
+                        {
+                            if (item.practiceId == pd.practice_id)
+                            {
+                                // ถ้า practice_status เป็น 1 ให้เปิด Object, ถ้า 0 ปิด
+                                bool isOpen = (pd.practice_status == 1);
+                                item.targetObject.SetActive(isOpen);
+
+                                // อัปเดตชื่อและรายละเอียดใน UI
+                                if (item.nameText != null)
+                                {
+                                    item.nameText.text = pd.practice_name;
+                                }
+                                if (item.detailText != null)
+                                {
+                                    item.detailText.text = pd.practice_detail;
+                                }
+                                break;
+                            }
+                        }
+                    }
                 }
             }
             else
             {
-                //Debug.LogError($"Error calling {finalUrl}: {www.error}");
+                Debug.LogError($"Error calling {finalUrl}: {www.error}");
             }
         }
     }
+}
 
-    // โครงสร้างข้อมูลที่รับจาก JSON
-    [System.Serializable]
-    public class PracticeStatusResponse
+// ---------------------------------------------------
+// Helper สำหรับ parse JSON array ด้วย Unity JsonUtility
+// Unity ไม่สามารถ parse JSON Array ได้ตรง ๆ ดังนั้นต้องใช้ Wrapper
+// ---------------------------------------------------
+public static class JsonHelper
+{
+    public static T[] FromJson<T>(string json)
     {
-        public int practice_id;
-        public int practice_status;
-        public string practice_name;  // เพิ่มชื่อของ practice
-        public string practice_detail; // เพิ่มรายละเอียดของ practice
+        string newJson = "{\"Items\":" + json + "}";
+        Wrapper<T> wrapper = JsonUtility.FromJson<Wrapper<T>>(newJson);
+        return wrapper.Items;
+    }
+
+    [System.Serializable]
+    private class Wrapper<T>
+    {
+        public T[] Items;
     }
 }

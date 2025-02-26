@@ -9,6 +9,8 @@ using System.Linq;
 
 public class SaveLoadManager2 : MonoBehaviour
 {
+    [Header("Save Type (ตัวเลข)")]
+    public int saveTypeDigital = 0;
     public float loadCooldown = 0.1f;
     private bool isLoading = false;
     private bool isSaving = false;
@@ -52,6 +54,7 @@ public class SaveLoadManager2 : MonoBehaviour
     {
         public string userId;
         public string saveJson;
+        public int save_type;
     }
 
     [Serializable]
@@ -219,11 +222,16 @@ public class SaveLoadManager2 : MonoBehaviour
             Debug.LogWarning("No valid userId found in PlayerPrefs. Save might not work properly.");
         }
 
+
         ServerSaveRequest requestBody = new ServerSaveRequest
         {
             userId = userId,
-            saveJson = json
+            saveJson = json,
+            save_type = this.saveTypeDigital
+
         };
+        Debug.Log($"test Save _ type : {requestBody.save_type}");
+
         string bodyJsonString = JsonUtility.ToJson(requestBody);
         byte[] bodyRaw = Encoding.UTF8.GetBytes(bodyJsonString);
 
@@ -337,7 +345,6 @@ public class SaveLoadManager2 : MonoBehaviour
             isLoading = false;
             yield break;
         }
-        Debug.Log($"test UID : {userId} Test {saveId}");
         string urlWithParam = apiLoadByIdUrl + "?userId=" + userId + "&saveId=" + saveId;
         using (UnityWebRequest request = UnityWebRequest.Get(urlWithParam))
         {
@@ -354,16 +361,12 @@ public class SaveLoadManager2 : MonoBehaviour
             ServerLoadResponse serverResp =
                 JsonUtility.FromJson<ServerLoadResponse>(request.downloadHandler.text);
 
-
-            Debug.Log($"testtttt 355 : {serverResp.saveJson}");
-
             if (serverResp == null || serverResp.saveJson == null)
             {
                 Debug.LogWarning("No save data returned from server for saveId=" + saveId);
                 isLoading = false;
                 yield break;
             }
-            
 
             SaveData saveData = serverResp.saveJson;
             if (saveData == null)

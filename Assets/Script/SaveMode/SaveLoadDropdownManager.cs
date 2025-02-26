@@ -85,7 +85,7 @@ public class SaveLoadDropdownManager : MonoBehaviour
             yield break;
         }
 
-        string url = "http://localhost:5000/api/simulator/listSaves?userId=" + userId;
+        string url = "http://localhost:5000/api/simulator/listSavesDigital?userId=" + userId;
         using (UnityWebRequest req = UnityWebRequest.Get(url))
         {
             yield return req.SendWebRequest();

@@ -13181,6 +13181,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea0e8c5e077fadd41ac35142ad1b78fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  saveTypeDigital: 1
   loadCooldown: 0.3
   saveFileName: SaveFileDigital.json
   spawnManager: {fileID: 1970035168}
