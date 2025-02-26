@@ -16,7 +16,7 @@ public class ToggleObjects : MonoBehaviour
     public class ToggleItem
     {
         public GameObject targetObject;       // Object ที่จะเปิด/ปิด
-        public int practiceId;                // ID ที่จะใช้จับคู่กับข้อมูลที่ได้รับจาก API
+        public int practiceId;                // ID ที่ใช้จับคู่กับข้อมูลที่ได้รับจาก API
         public TextMeshProUGUI nameText;      // สำหรับแสดงชื่อ practice
         public TextMeshProUGUI detailText;    // สำหรับแสดงรายละเอียด practice
     }
@@ -36,7 +36,7 @@ public class ToggleObjects : MonoBehaviour
 
     void Start()
     {
-        // ดึง userId จาก PlayerPrefs ที่ถูกเซ็ตไว้จาก GoogleAuthen หรือ WebSocketManager
+        // ดึง userId จาก PlayerPrefs (GoogleAuthen หรือ WebSocketManager ควรเซ็ตไว้)
         string storedUserId = PlayerPrefs.GetString("userId", "unknown");
 
         if (string.IsNullOrEmpty(storedUserId) || storedUserId == "unknown")
@@ -66,23 +66,30 @@ public class ToggleObjects : MonoBehaviour
         {
             yield return www.SendWebRequest();
 
+            // ก่อนตรวจสอบข้อมูล ให้ปิด Object ทุกตัวเป็นค่า default
+            foreach (var item in toggleItems)
+            {
+                item.targetObject.SetActive(false);
+                if (item.nameText != null) item.nameText.text = "";
+                if (item.detailText != null) item.detailText.text = "";
+            }
+
             if (www.result == UnityWebRequest.Result.Success)
             {
                 string json = www.downloadHandler.text;
-                // Parse JSON Array ด้วย JsonHelper (เพราะ Unity JsonUtility ไม่รองรับ Array โดยตรง)
+                // Parse JSON Array ด้วย JsonHelper
                 PracticeFindData[] dataArray = JsonHelper.FromJson<PracticeFindData>(json);
 
-                if (dataArray != null)
+                // ถ้าไม่มีข้อมูลหรือ array ว่าง ก็จะคง Object ปิดอยู่
+                if (dataArray != null && dataArray.Length > 0)
                 {
-                    // สำหรับแต่ละข้อมูล practice ที่ได้รับจาก API
                     foreach (var pd in dataArray)
                     {
-                        // วน loop เช็คกับแต่ละ ToggleItem ที่กำหนดไว้ใน Inspector
                         foreach (var item in toggleItems)
                         {
                             if (item.practiceId == pd.practice_id)
                             {
-                                // ถ้า practice_status เป็น 1 ให้เปิด Object, ถ้า 0 ปิด
+                                // เปิด Object ถ้า practice_status เป็น 1
                                 bool isOpen = (pd.practice_status == 1);
                                 item.targetObject.SetActive(isOpen);
 
@@ -99,6 +106,10 @@ public class ToggleObjects : MonoBehaviour
                             }
                         }
                     }
+                }
+                else
+                {
+                    Debug.Log("No practice data found. All objects set to inactive.");
                 }
             }
             else
