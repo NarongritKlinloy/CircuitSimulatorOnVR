@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Networking; // สำหรับ UnityWebRequest
 using System.Text;           // สำหรับ Encoding
-using System.IO;            
-using System;               
+using System.IO;
+using System;
 using System.Linq;
 
 public class SaveLoadManager2 : MonoBehaviour
@@ -14,7 +14,7 @@ public class SaveLoadManager2 : MonoBehaviour
     private bool isSaving = false;
 
     [SerializeField]
-    private string saveFileName = "saveFileDigital.json"; 
+    private string saveFileName = "saveFileDigital.json";
     // ^ ไม่ได้ใช้แล้วแต่เก็บไว้เฉย ๆ
 
     private string apiSaveUrl = "http://localhost:5000/api/simulator/save";
@@ -66,7 +66,7 @@ public class SaveLoadManager2 : MonoBehaviour
     public class ServerLoadResponse
     {
         public string message;
-        public string saveJson;
+        public SaveData saveJson;
         public string simulateName;
         public string simulateDate;
     }
@@ -219,7 +219,8 @@ public class SaveLoadManager2 : MonoBehaviour
             Debug.LogWarning("No valid userId found in PlayerPrefs. Save might not work properly.");
         }
 
-        ServerSaveRequest requestBody = new ServerSaveRequest {
+        ServerSaveRequest requestBody = new ServerSaveRequest
+        {
             userId = userId,
             saveJson = json
         };
@@ -294,15 +295,15 @@ public class SaveLoadManager2 : MonoBehaviour
             else
             {
                 Debug.Log("[LoadFromDatabase] => " + request.downloadHandler.text);
-                ServerLoadResponse serverResp = 
+                ServerLoadResponse serverResp =
                     JsonUtility.FromJson<ServerLoadResponse>(request.downloadHandler.text);
-                if (serverResp == null || string.IsNullOrEmpty(serverResp.saveJson))
+                if (serverResp == null || serverResp.saveJson == null)
                 {
                     Debug.LogWarning("No save data returned from server.");
                     yield break;
                 }
 
-                SaveData saveData = JsonUtility.FromJson<SaveData>(serverResp.saveJson);
+                SaveData saveData = serverResp.saveJson;
                 if (saveData == null)
                 {
                     Debug.LogError("Failed to parse saveJson");
@@ -336,7 +337,7 @@ public class SaveLoadManager2 : MonoBehaviour
             isLoading = false;
             yield break;
         }
-
+        Debug.Log($"test UID : {userId} Test {saveId}");
         string urlWithParam = apiLoadByIdUrl + "?userId=" + userId + "&saveId=" + saveId;
         using (UnityWebRequest request = UnityWebRequest.Get(urlWithParam))
         {
@@ -352,14 +353,19 @@ public class SaveLoadManager2 : MonoBehaviour
             Debug.Log("[LoadById] => " + request.downloadHandler.text);
             ServerLoadResponse serverResp =
                 JsonUtility.FromJson<ServerLoadResponse>(request.downloadHandler.text);
-            if (serverResp == null || string.IsNullOrEmpty(serverResp.saveJson))
+
+
+            Debug.Log($"testtttt 355 : {serverResp.saveJson}");
+
+            if (serverResp == null || serverResp.saveJson == null)
             {
                 Debug.LogWarning("No save data returned from server for saveId=" + saveId);
                 isLoading = false;
                 yield break;
             }
+            
 
-            SaveData saveData = JsonUtility.FromJson<SaveData>(serverResp.saveJson);
+            SaveData saveData = serverResp.saveJson;
             if (saveData == null)
             {
                 Debug.LogError("Failed to parse saveJson");
@@ -368,6 +374,9 @@ public class SaveLoadManager2 : MonoBehaviour
             }
 
             ClearCurrentDevices();
+
+            Debug.Log($"test 2 : {saveData} ");
+
             yield return StartCoroutine(LoadSequence(saveData));
             isLoading = false;
         }
