@@ -13,6 +13,7 @@ public class GoogleAuthen : MonoBehaviour
     private string serverUrl = "http://localhost:5000/register";
     // ไม่ต้องเปลี่ยน sceneอีกต่อไป
     public string loginScene = "LoginScene"; // สำหรับ logout
+    public ManagementCanvas managementCanvas;
 
     void Start()
     {
@@ -49,6 +50,8 @@ public class GoogleAuthen : MonoBehaviour
     IEnumerator LogoutAndSwitchScene()
     {
         yield return new WaitForSeconds(2);
+        managementCanvas.ShowLoginGoogle();
+
         // ไม่เปลี่ยน scene แต่สามารถทำการ reset UI ได้ตามต้องการ
     }
 
@@ -179,5 +182,11 @@ public class GoogleAuthen : MonoBehaviour
         {
             statusText.text = message;
         }
+    }
+    // ฟังก์ชันใหม่สำหรับเปิดเบราว์เซอร์ภายนอกและไปที่ Google
+    public void OpenGoogle()
+    {
+        Debug.Log("🔹 Opening Google in external browser");
+        Application.OpenURL("https://www.google.com");
     }
 }

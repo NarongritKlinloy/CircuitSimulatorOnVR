@@ -72,8 +72,8 @@ public class WebSocketManager : MonoBehaviour
                     ManagementCanvas managementCanvas = FindObjectOfType<ManagementCanvas>();
                     if (managementCanvas != null)
                     {
-                        managementCanvas.ShowMainMenu();
-                        Debug.Log("ShowMainMenu() called from WebSocketManager after userId set.");
+                        managementCanvas.ShowUiNotifyLogin();
+                        Debug.Log("ShowUiNotifyLogin() called from WebSocketManager after userId set.");
                     }
                 }
             }

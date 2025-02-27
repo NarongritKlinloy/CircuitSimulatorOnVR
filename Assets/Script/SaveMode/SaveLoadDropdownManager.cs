@@ -5,7 +5,6 @@ using TMPro;               // สำหรับ TMP_Dropdown
 using UnityEngine.Networking;
 using System;
 
-// เก็บข้อมูลแต่ละเซฟจาก DB
 [Serializable]
 public class SimulatorSaveItem
 {
@@ -14,13 +13,10 @@ public class SimulatorSaveItem
     public string simulate_date;
 }
 
-// Helper สำหรับแปลง JSON array -> List<T>
 public static class JsonArrayHelper
 {
     public static List<T> FromJson<T>(string json)
     {
-        // ครอบ JSON array ด้วยคีย์สมมติ "Items"
-        // เพื่อใช้ JsonUtility.FromJson() ได้
         string newJson = "{ \"Items\": " + json + "}";
         Wrapper<T> wrapper = JsonUtility.FromJson<Wrapper<T>>(newJson);
         return wrapper.Items;
@@ -36,47 +32,45 @@ public static class JsonArrayHelper
 public class SaveLoadDropdownManager : MonoBehaviour
 {
     [Header("UI References")]
-    public TMP_Dropdown saveDropdown;   // Dropdown สำหรับ Save
-    public TMP_Dropdown loadDropdown;   // Dropdown สำหรับ Load
-
-    // (ใหม่) เพิ่ม Dropdown สำหรับลบ
-    public TMP_Dropdown deleteDropdown; // Dropdown สำหรับ Delete
+    [Tooltip("Dropdown ตัวเดียวสำหรับ Save, Load, และ Delete")]
+    public TMP_Dropdown saveDropdown; // ใช้เป็น dropdown สำหรับเลือกเซฟ (option[0] = New Save)
 
     [Header("Script References")]
-    public SaveLoadManager2 saveLoadManager; // อ้างอิงสคริปต์ Save/Load
-    public SoundManager soundManager;        // ถ้ามี SoundManager ไว้เล่นเสียงปุ่ม
+    public CombinedSaveLoadManager saveLoadManager; // สคริปต์ Save/Load แบบรวม
+    public SoundManager soundManager;               // SoundManager สำหรับเล่นเสียงปุ่ม
+
+    [Header("Management Canvas Reference")]
+    public ManagementCanvas managementCanvas;         // สำหรับเรียกให้แสดง UI Notify ต่างๆ
+
+    [Header("Status Texts")]
+    public TMP_Text statusSave;    // สำหรับแสดงสถานะของการ Save
+    public TMP_Text statusLoad;    // สำหรับแสดงสถานะของการ Load
+    public TMP_Text statusDelete;  // สำหรับแสดงสถานะของการ Delete
 
     // เก็บรายการเซฟทั้งหมด (simulate_id, name, date)
     private List<SimulatorSaveItem> allUserSaves = new List<SimulatorSaveItem>();
-
-    // ตั้ง interval ให้รีเฟรชรายการทุก 5 วินาที
     private float refreshInterval = 5f;
+
+    // เก็บรายการเซฟที่เลือกไว้เมื่อมีการยืนยัน (overwrite หรือ delete)
+    private SimulatorSaveItem selectedSaveForConfirm = null;
 
     void Start()
     {
-        // ดึงรายการเซฟตอนเริ่ม (โดยรักษา selection false)
-        StartCoroutine(GetAllSavesFromServer(true));
-
-        // เริ่ม coroutine ที่จะวน refresh ทุก 5 วิ
+        // ดึงรายการเซฟตอนเริ่มต้น (ไม่รักษา selection)
+        StartCoroutine(GetAllSavesFromServer(keepSelection: false));
         StartCoroutine(AutoRefreshLoop());
     }
 
-    // วนลูปทุกๆ 5 วินาทีเพื่อรีเฟรชรายการเซฟ
     private IEnumerator AutoRefreshLoop()
     {
         while (true)
         {
             yield return new WaitForSeconds(refreshInterval);
-            // refresh โดยพยายามรักษา selection เดิม
             StartCoroutine(GetAllSavesFromServer(keepSelection: true));
         }
     }
 
-    /// <summary>
-    /// ดึงรายการเซฟจากเซิร์ฟเวอร์
-    /// keepSelection = จะพยายามรักษา selection เดิมใน dropdown
-    /// </summary>
-    private IEnumerator GetAllSavesFromServer(bool keepSelection = false)
+    private IEnumerator GetAllSavesFromServer(bool keepSelection)
     {
         string userId = PlayerPrefs.GetString("userId", "unknown");
         if (string.IsNullOrEmpty(userId) || userId == "unknown")
@@ -98,208 +92,150 @@ public class SaveLoadDropdownManager : MonoBehaviour
             {
                 string jsonText = req.downloadHandler.text;
                 var newList = JsonArrayHelper.FromJson<SimulatorSaveItem>(jsonText);
-
-                // อัปเดตรายการใน allUserSaves
+                // หาก newList เป็น null ให้ใช้ empty list
+                if (newList == null)
+                {
+                    newList = new List<SimulatorSaveItem>();
+                }
                 allUserSaves = newList;
-
-                // อัปเดต dropdown
-                UpdateDropdowns(keepSelection);
+                UpdateDropdown(keepSelection);
             }
         }
     }
 
-    /// <summary>
-    /// สร้าง/เคลียร์รายการใน saveDropdown, loadDropdown, deleteDropdown
-    /// โดยพยายามรักษาค่า selection เดิม (ถ้า keepSelection=true)
-    /// </summary>
-    private void UpdateDropdowns(bool keepSelection)
+    private void UpdateDropdown(bool keepSelection)
     {
-        // จำค่า selection เก่า
-        int oldSaveIndex = saveDropdown.value;
-        int oldLoadIndex = loadDropdown.value;
-        int oldDeleteIndex = deleteDropdown.value;
-
-        // เก็บ ID ที่เคยเลือกใน saveDropdown, loadDropdown, deleteDropdown
-        long oldSaveId = -1;
-        if (oldSaveIndex > 0 && oldSaveIndex - 1 < allUserSaves.Count)
+        int oldIndex = saveDropdown.value;
+        long oldSelectedId = -1;
+        if (oldIndex > 0 && oldIndex - 1 < allUserSaves.Count)
         {
-            oldSaveId = allUserSaves[oldSaveIndex - 1].simulate_id;
-        }
-        long oldLoadId = -1;
-        if (oldLoadIndex > 0 && oldLoadIndex - 1 < allUserSaves.Count)
-        {
-            oldLoadId = allUserSaves[oldLoadIndex - 1].simulate_id;
-        }
-        long oldDeleteId = -1;
-        if (oldDeleteIndex > 0 && oldDeleteIndex - 1 < allUserSaves.Count)
-        {
-            oldDeleteId = allUserSaves[oldDeleteIndex - 1].simulate_id;
+            oldSelectedId = allUserSaves[oldIndex - 1].simulate_id;
         }
 
-        // ---------- Populate Save Dropdown ----------
         saveDropdown.options.Clear();
-        // option[0] = New Save
+        // ตัวเลือกแรก: "New Save"
         saveDropdown.options.Add(new TMP_Dropdown.OptionData("New Save"));
         foreach (var item in allUserSaves)
         {
             string displayText = $"{item.simulate_name} ({item.simulate_date})";
             saveDropdown.options.Add(new TMP_Dropdown.OptionData(displayText));
         }
-
-        // ---------- Populate Load Dropdown ----------
-        loadDropdown.options.Clear();
-        loadDropdown.options.Add(new TMP_Dropdown.OptionData("Select Save to Load"));
-        foreach (var item in allUserSaves)
+        if (keepSelection && oldSelectedId != -1)
         {
-            string displayText = $"{item.simulate_name} ({item.simulate_date})";
-            loadDropdown.options.Add(new TMP_Dropdown.OptionData(displayText));
-        }
-
-        // ---------- Populate Delete Dropdown ----------
-        deleteDropdown.options.Clear();
-        deleteDropdown.options.Add(new TMP_Dropdown.OptionData("Select Save to Delete"));
-        foreach (var item in allUserSaves)
-        {
-            string displayText = $"{item.simulate_name} ({item.simulate_date})";
-            deleteDropdown.options.Add(new TMP_Dropdown.OptionData(displayText));
-        }
-
-        if (keepSelection)
-        {
-            // หา newIndex ของ oldSaveId
-            if (oldSaveId != -1)
-            {
-                int newIndex = allUserSaves.FindIndex(s => s.simulate_id == oldSaveId);
-                saveDropdown.value = (newIndex >= 0) ? newIndex + 1 : 0;
-            }
-            else
-            {
-                saveDropdown.value = 0;
-            }
-
-            // หา newIndex ของ oldLoadId
-            if (oldLoadId != -1)
-            {
-                int newIndex = allUserSaves.FindIndex(s => s.simulate_id == oldLoadId);
-                loadDropdown.value = (newIndex >= 0) ? newIndex + 1 : 0;
-            }
-            else
-            {
-                loadDropdown.value = 0;
-            }
-
-            // หา newIndex ของ oldDeleteId
-            if (oldDeleteId != -1)
-            {
-                int newIndex = allUserSaves.FindIndex(s => s.simulate_id == oldDeleteId);
-                deleteDropdown.value = (newIndex >= 0) ? newIndex + 1 : 0;
-            }
-            else
-            {
-                deleteDropdown.value = 0;
-            }
+            int newIndex = allUserSaves.FindIndex(s => s.simulate_id == oldSelectedId);
+            saveDropdown.value = (newIndex >= 0) ? newIndex + 1 : 0;
         }
         else
         {
-            // ไม่รักษา selection -> เซ็ตเป็น 0 ทุก dropdown
             saveDropdown.value = 0;
-            loadDropdown.value = 0;
-            deleteDropdown.value = 0;
         }
-
-        // อัปเดต UI
         saveDropdown.RefreshShownValue();
-        loadDropdown.RefreshShownValue();
-        deleteDropdown.RefreshShownValue();
     }
 
-    // ----------------------------------------------------------------
-    // --------------------- ส่วนของปุ่ม Confirm ----------------------
-    // ----------------------------------------------------------------
-
-    // (1) ปุ่มยืนยัน Save
+    // ---------- Save ----------
     public void OnClick_ConfirmSave()
     {
         if (soundManager != null)
-        {
             soundManager.PlayButtonSound();
-        }
 
         int index = saveDropdown.value;
         if (index == 0)
         {
+            // New Save: ทำการเซฟทันที
             Debug.Log("User chooses to create a New Save");
-            saveLoadManager.Save();
+            saveLoadManager.SaveCombined();
+            statusSave.text = "Save new data Success!";
+            // หลัง save สำเร็จ ให้แสดง Notify ใน ManagementCanvas
+            managementCanvas.ShowUiNotifySaveSuccess();
         }
         else
         {
+            // ถ้าเลือกเซฟเก่า -> เป็นการ Overwrite
             int dataIndex = index - 1;
             if (dataIndex >= 0 && dataIndex < allUserSaves.Count)
             {
-                var chosen = allUserSaves[dataIndex];
-                Debug.Log($"User chooses to overwrite: {chosen.simulate_name} (ID={chosen.simulate_id})");
-
-                // ตัวอย่างนี้ยังคงเรียก Save() -> Insert ใหม่
-                // ถ้าต้องการ Update จริง ๆ ต้องทำ Endpoint update
-                saveLoadManager.Save();
+                selectedSaveForConfirm = allUserSaves[dataIndex];
+                Debug.Log($"User chooses to overwrite: {selectedSaveForConfirm.simulate_name} (ID={selectedSaveForConfirm.simulate_id})");
+                // แสดงหน้าต่างยืนยัน overwrite
+                managementCanvas.ShowUiNotifyConfrimSave();
+                // ผู้ใช้จะต้องกดปุ่มยืนยันใน UI notify confirm ซึ่งเรียก OnConfirmOverwriteSave()
             }
         }
     }
 
-    // (2) ปุ่มยืนยัน Load
+    // ฟังก์ชันที่เรียกจากปุ่มใน UI Notify Confirm Save
+    public void OnConfirmOverwriteSave()
+    {
+        if (selectedSaveForConfirm != null)
+        {
+            saveLoadManager.UpdateCombined(selectedSaveForConfirm.simulate_id);
+            statusSave.text = "Overwriting save data Success!";
+            managementCanvas.ShowUiNotifySaveSuccess();
+            selectedSaveForConfirm = null; // เคลียร์ค่า
+        }
+    }
+
+
+    // ---------- Load ----------
     public void OnClick_ConfirmLoad()
     {
         if (soundManager != null)
-        {
             soundManager.PlayButtonSound();
-        }
 
-        int index = loadDropdown.value;
+        int index = saveDropdown.value;
         if (index == 0)
         {
             Debug.Log("No save chosen to load.");
+            statusLoad.text = "No save selected for loading.";
             return;
         }
-
         int dataIndex = index - 1;
         if (dataIndex >= 0 && dataIndex < allUserSaves.Count)
         {
             var chosen = allUserSaves[dataIndex];
-            Debug.Log($"User chooses to Load: {chosen.simulate_name} (ID={chosen.simulate_id})");
-
-            saveLoadManager.LoadById(chosen.simulate_id);
+            Debug.Log($"User chooses to load: {chosen.simulate_name} (ID={chosen.simulate_id})");
+            saveLoadManager.LoadCombinedById(chosen.simulate_id);
+            statusLoad.text = "Loading save data Success!";
+            managementCanvas.ShowUiNotifyLoadSuccess();
         }
     }
 
-    // (3) ปุ่มยืนยัน Delete
+    // ---------- Delete ----------
     public void OnClick_ConfirmDelete()
     {
         if (soundManager != null)
-        {
             soundManager.PlayButtonSound();
-        }
 
-        int index = deleteDropdown.value;
+        int index = saveDropdown.value;
         if (index == 0)
         {
             Debug.Log("No save chosen to delete.");
+            statusDelete.text = "No save selected for deletion.";
             return;
         }
-
         int dataIndex = index - 1;
         if (dataIndex >= 0 && dataIndex < allUserSaves.Count)
         {
-            var chosen = allUserSaves[dataIndex];
-            Debug.Log($"User chooses to DELETE: {chosen.simulate_name} (ID={chosen.simulate_id})");
-
-            // เรียก coroutine ลบ
-            StartCoroutine(DeleteSaveFromServer(chosen.simulate_id));
+            selectedSaveForConfirm = allUserSaves[dataIndex];
+            Debug.Log($"User chooses to delete: {selectedSaveForConfirm.simulate_name} (ID={selectedSaveForConfirm.simulate_id})");
+            // แสดงหน้าต่างยืนยันการลบ
+            managementCanvas.ShowUiNotifyConfrimDelete();
+            // ผู้ใช้จะต้องกดปุ่มยืนยันใน UI notify confirm delete ซึ่งเรียก OnConfirmDelete()
         }
     }
 
-    /// <summary>
-    /// Coroutine สำหรับเรียก API ลบเซฟตาม ID
-    /// </summary>
+    // ฟังก์ชันที่เรียกจากปุ่มใน UI Notify Confirm Delete
+    public void OnConfirmDelete()
+    {
+        if (selectedSaveForConfirm != null)
+        {
+            StartCoroutine(DeleteSaveFromServer(selectedSaveForConfirm.simulate_id));
+            statusDelete.text = "Delete save data Success!";
+            managementCanvas.ShowUiNotifyDelete();
+            selectedSaveForConfirm = null;
+        }
+    }
+
     private IEnumerator DeleteSaveFromServer(long saveId)
     {
         string userId = PlayerPrefs.GetString("userId", "unknown");
@@ -309,22 +245,19 @@ public class SaveLoadDropdownManager : MonoBehaviour
             yield break;
         }
 
-        // เรียก /api/simulator/deleteById?userId=xxx&saveId=yyy
         string url = $"http://localhost:5000/api/simulator/deleteById?userId={userId}&saveId={saveId}";
-
         using (UnityWebRequest req = UnityWebRequest.Delete(url))
         {
             yield return req.SendWebRequest();
-
             if (req.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError("Delete save failed: " + req.error);
+                statusDelete.text = "Delete failed: " + req.error;
             }
             else
             {
                 Debug.Log("Delete success => " + req.downloadHandler.text);
-                // หลังจากลบเสร็จ ให้รีเฟรชรายการเซฟ
-                // จะไม่รักษา selection (เพราะอันที่ลบอาจหายไปแล้ว)
+                statusDelete.text = "Delete successful!";
                 StartCoroutine(GetAllSavesFromServer(keepSelection: false));
             }
         }
