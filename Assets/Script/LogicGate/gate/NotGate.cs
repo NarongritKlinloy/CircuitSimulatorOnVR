@@ -16,12 +16,12 @@ public class NotGate : MonoBehaviour
         // ตั้งชื่อ Input และ Output
         if (input != null)
         {
-            input.gameObject.name = $"{gameObject.name}_IN";
+            input.gameObject.name = $"{gameObject.name}_IN1";
         }
 
         if (output != null)
         {
-            output.gameObject.name = $"{gameObject.name}_OUT";
+            output.gameObject.name = $"{gameObject.name}_OUT1";
         }
     }
 

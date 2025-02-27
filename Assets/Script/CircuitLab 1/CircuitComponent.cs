@@ -9,7 +9,8 @@ public class CircuitComponent : MonoBehaviour
     // Public members set in Unity Object Inspector
     public CircuitLab Lab;
 
-    public bool IsPlaced { get; protected set; }
+    public bool IsPlaced { get; set; }  // อนุญาตให้แก้ไขค่าได้
+
     public bool IsHeld { get; protected set; }
     public bool IsClone { get; set; }
     public bool IsClosed { get; protected set; }
@@ -169,4 +170,3 @@ public class CircuitComponent : MonoBehaviour
 }
 
 public enum Direction { North, South, East, West };
-

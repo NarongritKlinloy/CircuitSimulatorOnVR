@@ -3,7 +3,6 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 using UnityEngine.Networking;
-using UnityEngine.SceneManagement;
 
 public class GoogleAuthen : MonoBehaviour
 {
@@ -12,8 +11,9 @@ public class GoogleAuthen : MonoBehaviour
     private string redirectUri = "http://localhost:5000/callback";
     private string authUrl;
     private string serverUrl = "http://localhost:5000/register";
-    public string nextScene = "MainScene";
-    public string loginScene = "LoginScene"; // เปลี่ยนกลับไปหน้าล็อกอิน
+    // ไม่ต้องเปลี่ยน sceneอีกต่อไป
+    public string loginScene = "LoginScene"; // สำหรับ logout
+    public ManagementCanvas managementCanvas;
 
     void Start()
     {
@@ -22,51 +22,50 @@ public class GoogleAuthen : MonoBehaviour
                   "&redirect_uri=" + Uri.EscapeDataString(redirectUri) +
                   "&response_type=token" +
                   "&scope=email%20profile%20openid" +
-                  "&prompt=select_account"; // บังคับให้เลือกบัญชีใหม่ทุกครั้ง
+                  "&prompt=select_account";
 
         Application.deepLinkActivated += OnDeepLink;
-
-        // สำหรับทดสอบใน Editor (จำลอง deep link)
-#if UNITY_EDITOR
-        // Uncomment บรรทัดด้านล่างเพื่อทดสอบ deep link ใน Editor ได้เลย
-        // SimulateDeepLink("unitydl://auth?access_token=TEST_TOKEN_EDITOR");
-#endif
     }
 
     public void OnSignIn()
     {
+        StartCoroutine(Wiat());
         Debug.Log("🔹 Opening Google Login: " + authUrl);
         Application.OpenURL(authUrl);
     }
-
+    IEnumerator Wiat()
+    {
+        yield return new WaitForSeconds(2);
+        // ไม่เปลี่ยน scene แต่สามารถทำการ reset UI ได้ตามต้องการ
+    }
     public void OnLogout()
     {
         Debug.Log("🔹 Logging out...");
-
-        // ลบ Token ที่ถูกเก็บไว้
         PlayerPrefs.DeleteKey("accessToken");
+        PlayerPrefs.DeleteKey("userId");
         PlayerPrefs.Save();
-
-        // ดีเลย์ 2 วินาทีก่อนเปลี่ยนกลับไปหน้าล็อกอิน
         StartCoroutine(LogoutAndSwitchScene());
     }
 
     IEnumerator LogoutAndSwitchScene()
     {
         yield return new WaitForSeconds(2);
-        SceneManager.LoadScene(loginScene);
+        managementCanvas.ShowLoginGoogle();
+
+        // ไม่เปลี่ยน scene แต่สามารถทำการ reset UI ได้ตามต้องการ
     }
 
     void OnDeepLink(string url)
     {
         Debug.Log("🔹 Received Deep Link: " + url);
         string token = ExtractTokenFromURL(url);
-
         if (!string.IsNullOrEmpty(token))
         {
             Debug.Log("✅ Extracted Token: " + token);
-            PlayerPrefs.SetString("accessToken", token); // เก็บ Token ไว้
+            // เก็บ accessToken ชั่วคราว (ถ้าอยากใช้)
+            PlayerPrefs.SetString("accessToken", token);
             PlayerPrefs.Save();
+            // เรียก /register เพื่อให้ server ลงทะเบียน/อัปเดต user
             StartCoroutine(SendUserDataToServer(token));
         }
         else
@@ -76,22 +75,25 @@ public class GoogleAuthen : MonoBehaviour
         }
     }
 
-    // ฟังก์ชันจำลอง deep link สำหรับทดสอบใน Editor
+    // สำหรับจำลอง deep link ใน Editor
     void SimulateDeepLink(string url)
     {
         Debug.Log("Simulating deep link: " + url);
         OnDeepLink(url);
     }
 
+    // ส่ง accessToken ไปยังเซิร์ฟเวอร์เป็น JSON payload (เพื่อ register user)
     IEnumerator SendUserDataToServer(string accessToken)
     {
-        WWWForm form = new WWWForm();
-        form.AddField("accessToken", accessToken);
+        string jsonPayload = JsonUtility.ToJson(new { accessToken = accessToken });
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonPayload);
 
-        using (UnityWebRequest request = UnityWebRequest.Post(serverUrl, form))
+        using (UnityWebRequest request = new UnityWebRequest(serverUrl, "POST"))
         {
-            // ตั้ง header ถ้าจำเป็น (กรณีส่ง JSON ควรใช้ UploadHandlerRaw แต่ที่นี่ใช้ WWWForm)
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
+
             yield return request.SendWebRequest();
 
 #if UNITY_2020_1_OR_NEWER
@@ -105,44 +107,54 @@ public class GoogleAuthen : MonoBehaviour
             }
             else
             {
-                Debug.Log("✅ User data sent successfully: " + request.downloadHandler.text);
-                UpdateStatusText("✅ Login successful!");
-                yield return new WaitForSeconds(1f);
-                SceneManager.LoadScene(nextScene);
+                Debug.Log("✅ Server response: " + request.downloadHandler.text);
+                UserResponse userResponse = JsonUtility.FromJson<UserResponse>(request.downloadHandler.text);
+                if (userResponse != null && !string.IsNullOrEmpty(userResponse.userId))
+                {
+                    // เก็บ userId จาก HTTP response ไว้ใน PlayerPrefs ได้อีกทาง (เผื่อ fallback)
+                    PlayerPrefs.SetString("userId", userResponse.userId);
+                    PlayerPrefs.Save();
+                    Debug.Log("🔹 Stored userId in PlayerPrefs: " + PlayerPrefs.GetString("userId"));
+                    UpdateStatusText("✅ Login successful! Welcome " + userResponse.userId);
+                }
+                else
+                {
+                    Debug.LogError("❌ Login failed: Invalid server response.");
+                    UpdateStatusText("❌ Login failed: Invalid server response.");
+                }
             }
         }
     }
 
-    // ปรับปรุงฟังก์ชันดึง token ให้รองรับทั้ง Fragment และ Query String
+    [Serializable]
+    public class UserResponse
+    {
+        public string message;
+        public string userId;
+    }
+
+    // ดึง accessToken จาก URL
     string ExtractTokenFromURL(string url)
     {
         try
         {
             Uri uri = new Uri(url);
-            string token = null;
-            // ตรวจสอบใน Fragment ก่อน (โดยปกติแล้ว response_type=token จะส่ง token ใน Fragment)
+            // parse fragment (#)
             if (!string.IsNullOrEmpty(uri.Fragment))
             {
-                string fragment = uri.Fragment;
-                if (fragment.StartsWith("#"))
-                {
-                    fragment = fragment.Substring(1);
-                }
-
+                string fragment = uri.Fragment.StartsWith("#") ? uri.Fragment.Substring(1) : uri.Fragment;
                 var queryParams = fragment.Split('&');
                 foreach (string param in queryParams)
                 {
                     string[] keyValue = param.Split('=');
                     if (keyValue.Length == 2 && keyValue[0] == "access_token")
                     {
-                        token = keyValue[1];
-                        break;
+                        return keyValue[1];
                     }
                 }
             }
-
-            // หากไม่เจอใน Fragment ให้ตรวจสอบใน Query String
-            if (string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(uri.Query))
+            // parse query (?)
+            if (!string.IsNullOrEmpty(uri.Query))
             {
                 string query = uri.Query.TrimStart('?');
                 var queryParams = query.Split('&');
@@ -151,12 +163,11 @@ public class GoogleAuthen : MonoBehaviour
                     string[] keyValue = param.Split('=');
                     if (keyValue.Length == 2 && keyValue[0] == "access_token")
                     {
-                        token = keyValue[1];
-                        break;
+                        return keyValue[1];
                     }
                 }
             }
-            return token;
+            return null;
         }
         catch (Exception ex)
         {
@@ -172,7 +183,6 @@ public class GoogleAuthen : MonoBehaviour
             statusText.text = message;
         }
     }
-
     // ฟังก์ชันใหม่สำหรับเปิดเบราว์เซอร์ภายนอกและไปที่ Google
     public void OpenGoogle()
     {

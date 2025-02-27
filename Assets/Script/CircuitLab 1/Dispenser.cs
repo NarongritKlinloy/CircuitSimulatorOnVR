@@ -56,12 +56,21 @@ public class Dispenser : MonoBehaviour, IDispenser
 
     private void AnimateComponents()
     {
+        // วนลูป AnimatedComponent ทั้งหมด
         foreach (var component in animatedComponents)
         {
-            // First, animate the total position so that the x and z values are calculated properly
-            component.currentPosition = Vector3.MoveTowards(component.gameObject.transform.position, component.targetPosition, animationSpeed * Time.deltaTime);
+            // ตรวจสอบก่อนว่า component หรือ gameObject ถูกทำลายไปแล้วหรือไม่
+            if (component == null || component.gameObject == null)
+                continue;
 
-            // Handle the y component of the position specially, to give it the desired arc throughout the animation
+            // ขยับตำแหน่งตาม MoveTowards
+            component.currentPosition = Vector3.MoveTowards(
+                component.gameObject.transform.position,
+                component.targetPosition,
+                animationSpeed * Time.deltaTime
+            );
+
+            // คำนวณความโค้ง (arc) ของการเคลื่อนที่
             float x0 = component.startPosition.x;
             float x1 = component.targetPosition.x;
             float dist = x1 - x0;
@@ -72,24 +81,25 @@ public class Dispenser : MonoBehaviour, IDispenser
                 float arc = arcHeight * (nextX - x0) * (nextX - x1) / (-0.25f * dist * dist);
                 component.currentPosition.y = baseY + arc;
 
-                // Also shrink as we approach the destination
+                // ค่อย ๆ ย่อขนาด (Lerp) จนถึงเป้าหมาย
                 component.currentScale = Vector3.Lerp(component.startScale, component.targetScale, (nextX - x0) / dist);
                 component.gameObject.transform.localScale = component.currentScale;
             }
 
-            // Move to the calculated position
+            // อัปเดตตำแหน่งจริง
             component.gameObject.transform.position = component.currentPosition;
 
-            // Destroy the object when we reach the target
+            // เมื่อถึงเป้าหมายแล้วให้ Destroy
             if (component.currentPosition == component.targetPosition)
             {
                 Destroy(component.gameObject);
+                // เซ็ตให้เป็น null เพื่อให้ RemoveAll จัดการลบออกจากลิสต์
                 component.gameObject = null;
             }
         }
 
-        // Remove completed animations from the list
-        animatedComponents.RemoveAll(item => item.gameObject == null);
+        // ลบ AnimatedComponent ที่ gameObject == null (ถูก Destroy ไปแล้ว) ออกจากลิสต์
+        animatedComponents.RemoveAll(item => item == null || item.gameObject == null);
     }
 
     public void Reset()
@@ -127,7 +137,7 @@ public class Dispenser : MonoBehaviour, IDispenser
     void OnTriggerExit(Collider other)
     {
         // Find out if we lost our child
-        if (transform.childCount == 0 && other.transform.name.Contains("Component") && 
+        if (transform.childCount == 0 && other.transform.name.Contains("Component") &&
             (other.transform.tag == componentTag.ToString()))
         {
             // Turn back on gravity

@@ -1,90 +1,227 @@
 using UnityEngine;
+using System.Collections;
+using TMPro;
 
 public class ManagementCanvas : MonoBehaviour
 {
     [Header("เมนูหลักแต่ละหน้า")]
-    public GameObject mainMenu;   // หน้าแรก
-    public GameObject secondMenu; // หน้าที่ 2
-    public GameObject modeMenu;   // หน้าที่ 3
-    public GameObject saveMenu;   // หน้าที่ 4
+    public GameObject LoginGoogle;
+    public GameObject mainMenu;
+    public GameObject secondMenu;
+    public GameObject modeMenu;
+    public GameObject saveMenu;
+    public GameObject Mannual;
 
-    [Header("Object ที่จะเปิดเมื่อกดปุ่มที่ 2 ใน Mode Menu")]
-    public GameObject mySpecialObject;
+    public GameObject Practice;
 
-    [Header("Object ที่จะเปิดเมื่อกดปุ่ม Simulator")]
+    [Header("เมนูอื่นๆ")]
+    public GameObject UiNotifyLogin;
+    public GameObject UiNotifyLogout;
+    public GameObject UiNotifySave;
+    public GameObject UiNotifyConfirmSave;
+    public GameObject UiNotifyLoad;
+    public GameObject UiNotifyDelete;
+    public GameObject UiNotifyConfirmDelete;
+
+    [Header("UI สำหรับแสดง UID")]
+    public TMP_Text statussaveloaddelete;  // ให้กำหนดอ้างอิงไปยัง TextMeshPro Text ที่จะแสดง UID
+
+
+    [Header("Object พิเศษ")]
+    //public GameObject mySpecialObject;
     public GameObject simulatorObject1;
     public GameObject simulatorObject2;
 
+    [Header("UI สำหรับแสดง UID")]
+    public TMP_Text uidText;  // ให้กำหนดอ้างอิงไปยัง TextMeshPro Text ที่จะแสดง UID
+
+    private GameObject currentMenu = null; // เก็บหน้าเมนูที่เปิดอยู่ปัจจุบัน
+
     void Start()
     {
-        ShowMainMenu(); // เริ่มต้นที่หน้าแรก
-        simulatorObject1.SetActive(true);
-        simulatorObject2.SetActive(true);
+        // เริ่มต้นเปิดหน้า LoginGoogle
+        ShowLoginGoogle();
+
+        // ตัวอย่างการเซ็ต Active ของ simulatorObject
+        if (simulatorObject1 != null)
+            simulatorObject1.SetActive(true);
+        if (simulatorObject2 != null)
+            simulatorObject2.SetActive(true);
     }
 
-    private void ResetAllMenus()
-    {
-        // รีเซ็ตค่าเริ่มต้นของแต่ละหน้า
-        mainMenu.SetActive(false);
-        secondMenu.SetActive(false);
-        modeMenu.SetActive(false);
-        saveMenu.SetActive(false);
-        mySpecialObject.SetActive(false);
+    // -------------------------------------------------------------------
+    //  ฟังก์ชัน Fade
+    // -------------------------------------------------------------------
 
+    IEnumerator FadeOut(GameObject menu, float duration = 0.3f)
+    {
+        if (menu == null) yield break;
+
+        CanvasGroup cg = menu.GetComponent<CanvasGroup>();
+        if (cg == null) yield break; // ถ้าไม่มี CanvasGroup ให้ข้าม
+
+        float startAlpha = cg.alpha;
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            cg.alpha = Mathf.Lerp(startAlpha, 0f, time / duration);
+            yield return null;
+        }
+
+        cg.alpha = 0f;
+        menu.SetActive(false);
+    }
+
+    IEnumerator FadeIn(GameObject menu, float duration = 0.5f)
+    {
+        if (menu == null) yield break;
+
+        // เปิด GameObject ก่อน
+        menu.SetActive(true);
+
+        CanvasGroup cg = menu.GetComponent<CanvasGroup>();
+        if (cg == null) yield break;
+
+        float startAlpha = cg.alpha;
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            cg.alpha = Mathf.Lerp(startAlpha, 1f, time / duration);
+            yield return null;
+        }
+
+        cg.alpha = 1f;
+    }
+
+    // -------------------------------------------------------------------
+    //  ฟังก์ชันเปลี่ยนหน้า (แสดงเมนู)
+    // -------------------------------------------------------------------
+
+    private void ShowMenu(GameObject nextMenu)
+    {
+        // ถ้ามีหน้าเดิม ให้ FadeOut หน้าเดิมก่อน
+        if (currentMenu != null && currentMenu != nextMenu)
+        {
+            StartCoroutine(FadeOut(currentMenu));
+        }
+
+        // แล้ว FadeIn หน้าใหม่
+        if (nextMenu != null)
+        {
+            StartCoroutine(FadeIn(nextMenu));
+            currentMenu = nextMenu;
+        }
+        else
+        {
+            currentMenu = null;
+        }
+    }
+
+    public void ShowLoginGoogle()
+    {
+        ShowMenu(LoginGoogle);
     }
 
     public void ShowMainMenu()
     {
-        ResetAllMenus(); // รีเซ็ตก่อนเปิดหน้าใหม่
-        mainMenu.SetActive(true);
+        ShowMenu(mainMenu);
     }
 
     public void ShowSecondMenu()
     {
-        ResetAllMenus();
-        secondMenu.SetActive(true);
+        ShowMenu(secondMenu);
     }
 
     public void ShowModeMenu()
     {
-        ResetAllMenus();
-        modeMenu.SetActive(true);
+        ShowMenu(modeMenu);
     }
 
     public void ShowSaveMenu()
     {
-        ResetAllMenus();
-        saveMenu.SetActive(true);
+        ShowMenu(saveMenu);
     }
 
-    //===================== ปุ่มต่าง ๆ ใน Mode Menu =====================//
+    public void ShowManual()
+    {
+        ShowMenu(Mannual);
+    }
 
-    // ปุ่มแรก ยังไม่ต้องทำอะไร
+    public void Showpractice()
+    {
+        ShowMenu(Practice);
+
+        simulatorObject1.SetActive(true);
+        simulatorObject2.SetActive(false);
+    }
+    // เมนูแจ้งเตือน Login ที่จะใช้แสดง UID ที่ได้รับมา
+    public void ShowUiNotifyLogin()
+    {
+        ShowMenu(UiNotifyLogin);
+        // ดึงค่า userId จาก PlayerPrefs แล้วแสดงบน Text
+        string uid = PlayerPrefs.GetString("userId", "Unknown UID");
+        if (uidText != null)
+        {
+            uidText.text = "Welcome :" + uid;
+        }
+    }
+
+    public void ShowUiNotifyLogOut()
+    {
+        ShowMenu(UiNotifyLogout);
+    }
+
+    public void ShowUiNotifySaveSuccess()
+    {
+        ShowMenu(UiNotifySave);
+    }
+    public void ShowUiNotifyConfrimSave()
+    {
+        ShowMenu(UiNotifyConfirmSave);
+    }
+    public void ShowUiNotifyLoadSuccess()
+    {
+        ShowMenu(UiNotifyLoad);
+    }
+
+    public void ShowUiNotifyDelete()
+    {
+        ShowMenu(UiNotifyDelete);
+    }
+
+    public void ShowUiNotifyConfrimDelete()
+    {
+        ShowMenu(UiNotifyConfirmDelete);
+    }
+
+    // -------------------------------------------------------------------
+    //  ฟังก์ชันปุ่มใน Mode Menu
+    // -------------------------------------------------------------------
+
     public void ModeMenuButton1()
     {
         Debug.Log("Mode Menu Button #1 Pressed (Do nothing yet)");
     }
 
-    // ปุ่มที่ 2: เปิด mySpecialObject และปิดเมนูทั้งหมด
-    public void ModeMenuButton2()
-    {
-        ResetAllMenus();
-        mySpecialObject.SetActive(true);
-        simulatorObject1.SetActive(true); // ปิด wall circuit 
-        simulatorObject2.SetActive(false); //เปิด wall digital
 
 
-    }
-
-    // ปุ่มที่ 3: เปิด simulatorObject1 และ simulatorObject2 แล้วกลับไป Mode Menu
     public void ModeMenuButton3()
     {
-        simulatorObject1.SetActive(false);
-        simulatorObject2.SetActive(false);
-        ShowModeMenu(); // กลับไปที่ Mode Menu
+        if (simulatorObject1 != null)
+            simulatorObject1.SetActive(false);
+        if (simulatorObject2 != null)
+            simulatorObject2.SetActive(false);
+
+        ShowModeMenu();
     }
 
-    //===============================================================//
+    // -------------------------------------------------------------------
+    //  อื่น ๆ
+    // -------------------------------------------------------------------
 
     public void ExitApplication()
     {
