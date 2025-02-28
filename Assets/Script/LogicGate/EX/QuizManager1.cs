@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-public class QuizManager2 : MonoBehaviour
+public class QuizManager1 : MonoBehaviour
 {
     // -----------------------------
     // 1) โครงสร้างของตารางความจริง (Truth Table)
@@ -12,7 +12,6 @@ public class QuizManager2 : MonoBehaviour
     [System.Serializable]
     public class TruthTableEntry
     {
-        [Tooltip("ค่า input (0-63) ที่แทนสถานะของ 6 Toggle Switch (เมื่อแปลงเป็นเลขฐานสอง)")]
         public int input;
         public bool expectedOutput;
     }
@@ -27,8 +26,8 @@ public class QuizManager2 : MonoBehaviour
         [TextArea(2, 5)]
         public string description;
 
-        [Header("Toggle Switch (สมมติ 6 ตัว)")]
-        public ToggleSwitch[] toggleSwitches = new ToggleSwitch[6];
+        [Header("Toggle Switch (สมมติ 4 ตัว)")]
+        public ToggleSwitch[] toggleSwitches = new ToggleSwitch[4];
 
         [Header("LED ที่ต้องตรวจ")]
         public LED ledToCheck;
@@ -37,41 +36,20 @@ public class QuizManager2 : MonoBehaviour
         public int score = 100;
 
         [Header("ตารางความจริง (Truth Table) สำหรับโจทย์นี้")]
-        public List<TruthTableEntry> truthTableEntries = new List<TruthTableEntry>()
-        {
-            // ตัวอย่างค่าเริ่มต้น 16 แถว (สามารถแก้ไข/เพิ่ม/ลบได้ใน Inspector)
-            new TruthTableEntry(){ input = 0,  expectedOutput = false },
-            new TruthTableEntry(){ input = 1,  expectedOutput = false },
-            new TruthTableEntry(){ input = 2,  expectedOutput = false },
-            new TruthTableEntry(){ input = 3,  expectedOutput = false },
-            new TruthTableEntry(){ input = 4,  expectedOutput = false },
-            new TruthTableEntry(){ input = 5,  expectedOutput = false },
-            new TruthTableEntry(){ input = 6,  expectedOutput = false },
-            new TruthTableEntry(){ input = 7,  expectedOutput = false },
-            new TruthTableEntry(){ input = 8,  expectedOutput = false },
-            new TruthTableEntry(){ input = 9,  expectedOutput = false },
-            new TruthTableEntry(){ input = 10,  expectedOutput = false },
-            new TruthTableEntry(){ input = 11,  expectedOutput = false },
-            new TruthTableEntry(){ input = 12,  expectedOutput = false },
-            new TruthTableEntry(){ input = 13,  expectedOutput = false },
-            new TruthTableEntry(){ input = 14,  expectedOutput = false },
-            new TruthTableEntry(){ input = 15,  expectedOutput = false },
-            // ... ฯลฯ
-        };
+        public List<TruthTableEntry> truthTableEntries = new List<TruthTableEntry>();
+
+        // ฟิลด์สำหรับเก็บชื่ออุปกรณ์ที่ต้องการ (ถ้าต้องการ match ตามชื่อ)
+        [Header("ชื่ออุปกรณ์ที่ต้องการ (ถ้าอยาก match ตามชื่อ)")]
+        public string wantedLedName;
+        public string[] wantedToggleNames = new string[4];
     }
 
     // -----------------------------
-    // 3) ตัวแปรหลักของ QuizManager3
+    // 3) ตัวแปรหลักของ QuizManager1
     // -----------------------------
-    [Header("รายการโจทย์ทั้งหมด")]
     public List<LogicTask> tasks = new List<LogicTask>();
-
-    [Header("คะแนนรวม (ดูได้ใน Inspector)")]
     public int totalScore;
-
-    [Header("ข้อความแสดงผลการตรวจ")]
-    [TextArea(4, 8)]
-    public string resultMessage;
+    [TextArea(4, 8)] public string resultMessage;
 
     [System.Serializable]
     public class PracticeData
@@ -83,12 +61,15 @@ public class QuizManager2 : MonoBehaviour
         public string create_date;
     }
 
+    // -----------------------------
+    // 4) โหลดคะแนนของ Practice จาก DB (ตัวอย่าง)
+    // -----------------------------
     private void Start()
     {
-        // ตัวอย่าง: โหลดคะแนนจาก practice_id=2 มาใส่ tasks[0]
-        StartCoroutine(LoadPracticeScoreFromServer(2, 0));
+        // โหลดคะแนนตัวอย่าง
+        StartCoroutine(LoadPracticeScoreFromServer(1, 0));
+        // เรียก Coroutine สแกนอุปกรณ์
         StartCoroutine(ExtendedScanAndAssignObjectsCoroutine());
-
     }
 
     IEnumerator LoadPracticeScoreFromServer(int practiceId, int taskIndex)
@@ -121,19 +102,46 @@ public class QuizManager2 : MonoBehaviour
             }
         }
     }
+    private void OnEnable()
+    {
+        // เมื่อ GameObject ถูกเปิดใหม่ ให้เรียกสแกนหาอุปกรณ์อีกครั้ง
+        StartCoroutine(ExtendedScanAndAssignObjectsCoroutine());
+    }
 
     // -----------------------------
-    // 4) ฟังก์ชันหลัก: ตรวจสอบทุกโจทย์
+    // (ใหม่) เมื่อ GameObject ถูกปิด (Disable) ให้รีเซ็ตค่ากลับสู่สถานะเริ่มต้น
+    // -----------------------------
+    private void OnDisable()
+    {
+        // 1) เคลียร์การผูกอุปกรณ์ของทุก Task
+        for (int i = 0; i < tasks.Count; i++)
+        {
+            tasks[i].ledToCheck = null;
+            for (int j = 0; j < tasks[i].toggleSwitches.Length; j++)
+            {
+                tasks[i].toggleSwitches[j] = null;
+            }
+        }
+
+        // 2) รีเซ็ตคะแนนและข้อความ
+        totalScore = 0;
+        resultMessage = "";
+
+        Debug.Log("[QuizManager1] OnDisable: รีเซ็ตค่า tasks[], totalScore, และ resultMessage เรียบร้อยแล้ว");
+    }
+
+    // -----------------------------
+    // 5) ฟังก์ชัน CheckAllTasks
     // -----------------------------
     public void CheckAllTasks()
     {
-        // เคลียร์ resultMessage ก่อนเริ่มตรวจสอบ
         resultMessage = "";
 
-        // ตรวจสอบการผูกอุปกรณ์ในแต่ละ Task
+        // ตรวจการผูกอุปกรณ์
         for (int i = 0; i < tasks.Count; i++)
         {
             LogicTask task = tasks[i];
+
             for (int j = 0; j < task.toggleSwitches.Length; j++)
             {
                 if (task.toggleSwitches[j] == null)
@@ -144,6 +152,7 @@ public class QuizManager2 : MonoBehaviour
                     return;
                 }
             }
+
             if (task.ledToCheck == null)
             {
                 string errorMsg = $"[Task {i + 1}] โปรดผูก LED ให้ครบถ้วนก่อนตรวจสอบโจทย์";
@@ -153,6 +162,7 @@ public class QuizManager2 : MonoBehaviour
             }
         }
 
+        // หากผูกอุปกรณ์ครบแล้ว
         int scoreAccumulated = 0;
         string messageBuilder = "";
 
@@ -198,7 +208,7 @@ public class QuizManager2 : MonoBehaviour
     }
 
     // -----------------------------
-    // 5) ฟังก์ชัน SubmitScore
+    // 6) ฟังก์ชัน SubmitScore
     // -----------------------------
     public void SubmitScore()
     {
@@ -210,15 +220,15 @@ public class QuizManager2 : MonoBehaviour
     [System.Serializable]
     public class ScoreRequestData
     {
-        public string userId;       // uid
-        public int practiceId;      // practice_id
-        public QuizData quizData;   // สำหรับเก็บข้อมูลคะแนน
+        public string userId;
+        public int practiceId;
+        public QuizData quizData;
     }
 
     [System.Serializable]
     public class QuizData
     {
-        public int score;  // คะแนนที่ได้
+        public int score;
     }
 
     private IEnumerator SubmitScoreToServer(int score)
@@ -230,7 +240,7 @@ public class QuizManager2 : MonoBehaviour
             yield break;
         }
 
-        int practiceId = 2;
+        int practiceId = 1;
 
         ScoreRequestData requestData = new ScoreRequestData();
         requestData.userId = userId;
@@ -262,45 +272,37 @@ public class QuizManager2 : MonoBehaviour
     }
 
     // -----------------------------
-    // 6) บังคับอัปเดตวงจร
+    // 7) บังคับอัปเดตวงจร
     // -----------------------------
     void ForceUpdateCircuit()
     {
         LED[] leds = FindObjectsOfType<LED>();
-        foreach (LED led in leds)
-            led.UpdateState();
+        foreach (LED led in leds) led.UpdateState();
 
         AndGate[] ands = FindObjectsOfType<AndGate>();
-        foreach (AndGate a in ands)
-            a.UpdateState();
+        foreach (AndGate a in ands) a.UpdateState();
 
         OrGate[] ors = FindObjectsOfType<OrGate>();
-        foreach (OrGate o in ors)
-            o.UpdateState();
+        foreach (OrGate o in ors) o.UpdateState();
 
         NandGate[] nands = FindObjectsOfType<NandGate>();
-        foreach (NandGate n in nands)
-            n.UpdateState();
+        foreach (NandGate n in nands) n.UpdateState();
 
         NorGate[] nors = FindObjectsOfType<NorGate>();
-        foreach (NorGate n in nors)
-            n.UpdateState();
+        foreach (NorGate n in nors) n.UpdateState();
 
         XorGate[] xors = FindObjectsOfType<XorGate>();
-        foreach (XorGate x in xors)
-            x.UpdateState();
+        foreach (XorGate x in xors) x.UpdateState();
 
         XnorGate[] xnors = FindObjectsOfType<XnorGate>();
-        foreach (XnorGate x in xnors)
-            x.UpdateState();
+        foreach (XnorGate x in xnors) x.UpdateState();
 
         NotGate[] nots = FindObjectsOfType<NotGate>();
-        foreach (NotGate n in nots)
-            n.UpdateState();
+        foreach (NotGate n in nots) n.UpdateState();
     }
 
     // -----------------------------
-    // 7) ตรวจการเชื่อมต่อสายไฟ (DFS)
+    // 8) ตรวจการเชื่อมต่อสายไฟ (DFS)
     // -----------------------------
     (bool, string) CheckConnectionsWithError(LogicTask task)
     {
@@ -335,8 +337,7 @@ public class QuizManager2 : MonoBehaviour
 
     bool IsToggleSwitchConnected(LED led, ToggleSwitch toggle, WireManager[] wireManagers)
     {
-        if (led == null || led.input == null)
-            return false;
+        if (led == null || led.input == null) return false;
 
         var discoveredEdges = new HashSet<(OutputConnector, InputConnector)>();
         var discoveredGates = new HashSet<GameObject>();
@@ -461,7 +462,7 @@ public class QuizManager2 : MonoBehaviour
     }
 
     // -----------------------------
-    // 8) ตรวจว่ามี Gate อย่างน้อย 1 ตัว
+    // 9) ตรวจว่ามี Gate อย่างน้อย 1 ตัว
     // -----------------------------
     (bool, string) CheckAtLeastOneGate()
     {
@@ -474,20 +475,21 @@ public class QuizManager2 : MonoBehaviour
         totalGateCount += FindObjectsOfType<XnorGate>().Length;
         totalGateCount += FindObjectsOfType<NotGate>().Length;
 
-        return totalGateCount > 0 ?
-            (true, "พบ Gate อย่างน้อย 1 ตัวในฉาก\n") :
-            (false, "ไม่พบ Gate ใด ๆ ในฉาก\n");
+        if (totalGateCount > 0)
+        {
+            return (true, "พบ Gate อย่างน้อย 1 ตัวในฉาก\n");
+        }
+        else
+        {
+            return (false, "ไม่พบ Gate ใด ๆ ในฉาก\n");
+        }
     }
 
     // -----------------------------
-    // 9) ตรวจตารางความจริงของโจทย์
+    // 10) ตรวจตารางความจริงของโจทย์
     // -----------------------------
     public (bool, string) CheckTruthTableOutput(LogicTask task)
     {
-        // สำหรับโค้ดต้นฉบับ: เช็คเฉพาะ 4 ตัว (เป็นตัวอย่าง)
-        // แต่จริงๆ มี 6 ตัว ควรแก้ให้ครอบคลุม 6 ToggleSwitch
-        // ด้านล่างเป็นโค้ดเดิม (4 ตัวอย่าง)
-        // สามารถปรับแก้เป็น 6 ได้ตามรูปแบบ
         if (task.toggleSwitches == null || task.toggleSwitches.Length != 4)
             return (false, "CheckTruthTableOutput: ต้องมี ToggleSwitch 4 ตัว\n");
         if (task.ledToCheck == null)
@@ -496,31 +498,54 @@ public class QuizManager2 : MonoBehaviour
         bool allPassed = true;
         string errorMsg = "";
 
-        // ... โค้ดตรวจตารางความจริง (ตามต้นฉบับ) ...
-        // ถ้าต้องการรองรับ 6 ToggleSwitch จริง ให้แก้ตาม logic ของ 6 บิต
-        // เช่น combo มีได้ 0..63
+        foreach (var entry in task.truthTableEntries)
+        {
+            int combo = entry.input;
+            for (int i = 0; i < 4; i++)
+            {
+                bool desiredState = ((combo >> i) & 1) == 1;
+                if (task.toggleSwitches[i].isOn != desiredState)
+                {
+                    task.toggleSwitches[i].Toggle();
+                }
+            }
 
-        return allPassed ? (true, "CheckTruthTableOutput: Output ตรงตามตารางความจริงทั้งหมด\n")
-                         : (false, errorMsg);
+            ForceUpdateCircuit();
+
+            bool ledState = (task.ledToCheck.input != null) ? task.ledToCheck.input.isOn : false;
+            if (ledState != entry.expectedOutput)
+            {
+                allPassed = false;
+                string binaryStr = Convert.ToString(combo, 2).PadLeft(4, '0');
+                errorMsg += $"Combo {combo} (Toggle: {binaryStr}) -> คาด {entry.expectedOutput} แต่ได้ {ledState}\n";
+            }
+        }
+
+        if (allPassed)
+            return (true, "CheckTruthTableOutput: Output ตรงตามตารางความจริงทั้งหมด\n");
+        else
+            return (false, errorMsg);
     }
 
     // -----------------------------
-    // 10) คำนวณคะแนน
+    // 11) คำนวณคะแนน
     // -----------------------------
     int CalculateScore(LogicTask task, bool isToggleCorrect, bool isConnectionCorrect, bool hasGate, bool isTruthTableCorrect)
     {
         int scoreSum = 0;
+
         if (isToggleCorrect) scoreSum += 10;
         if (isConnectionCorrect) scoreSum += 10;
         if (hasGate) scoreSum += 10;
         if (isTruthTableCorrect) scoreSum += 70;
+
         scoreSum = Mathf.Clamp(scoreSum, 0, task.score);
         Debug.Log($"CalculateScore: คะแนนย่อย = {scoreSum}");
         return scoreSum;
     }
 
     // -----------------------------
-    // 11) หาคะแนนเต็มรวม
+    // 12) หาคะแนนเต็มรวม
     // -----------------------------
     public int GetMaxScore()
     {
@@ -533,11 +558,11 @@ public class QuizManager2 : MonoBehaviour
     }
 
     // -----------------------------
-    // 12) ฟังก์ชันผูกวัตถุที่ Spawn ใหม่ (ตัวอย่าง)
+    // 13) ฟังก์ชันผูกวัตถุที่ Spawn ใหม่ (ตัวอย่าง)
     // -----------------------------
     public void NotifySpawnedObject(GameObject spawnedObj)
     {
-        Debug.Log($"[QuizManager2] Spawned: {spawnedObj.name}");
+        Debug.Log($"[QuizManager1] Spawned: {spawnedObj.name}");
 
         LED newLED = spawnedObj.GetComponent<LED>();
         if (newLED != null)
@@ -576,7 +601,7 @@ public class QuizManager2 : MonoBehaviour
     }
 
     // -----------------------------
-    // (ใหม่) ฟังก์ชัน ScanAndAssignObjects()
+    // (เดิม) ฟังก์ชัน ScanAndAssignObjects()
     // -----------------------------
     public void ScanAndAssignObjects()
     {
@@ -585,14 +610,17 @@ public class QuizManager2 : MonoBehaviour
 
         for (int i = 0; i < tasks.Count; i++)
         {
-            // ถ้า LED ยังว่าง ให้ assign LED ตัวแรกที่พบ
-            if (tasks[i].ledToCheck == null && allLEDs.Length > 0)
+            // 1) Assign LED ถ้ายังว่าง
+            if (tasks[i].ledToCheck == null)
             {
-                tasks[i].ledToCheck = allLEDs[0];
-                Debug.Log($"[Task {i + 1}] Assign LED {allLEDs[0].name} จาก ScanAndAssignObjects()");
+                if (allLEDs.Length > 0)
+                {
+                    tasks[i].ledToCheck = allLEDs[0];
+                    Debug.Log($"[Task {i + 1}] Assign LED {allLEDs[0].name} จาก ScanAndAssignObjects()");
+                }
             }
 
-            // สำหรับ ToggleSwitch ทั้ง 6 ตัว (แก้เป็น 6 แทน 4)
+            // 2) Assign ToggleSwitch ทั้ง 4 ตัว
             for (int j = 0; j < tasks[i].toggleSwitches.Length; j++)
             {
                 if (tasks[i].toggleSwitches[j] == null)
@@ -611,7 +639,7 @@ public class QuizManager2 : MonoBehaviour
                         if (!usedAlready)
                         {
                             tasks[i].toggleSwitches[j] = tog;
-                            Debug.Log($"[Task {i + 1}] Assign ToggleSwitch {tog.name} เป็น toggleSwitches[{j}] จาก ScanAndAssignObjects()");
+                            Debug.Log($"[Task {i + 1}] Assign ToggleSwitch {tog.name} เป็น toggleSwitches[{j}]");
                             break;
                         }
                     }
@@ -621,13 +649,8 @@ public class QuizManager2 : MonoBehaviour
     }
 
     // -----------------------------
-    // (ใหม่) เพิ่มฟังก์ชัน ExtendedScanAndAssignObjectsCoroutine()
+    // (ใหม่) ฟังก์ชัน ExtendedScanAndAssignObjects()
     // -----------------------------
-    /// <summary>
-    /// สแกนหาอุปกรณ์แบบวนซ้ำหลายครั้ง (จนกว่าจะ Assign ครบทุก Task หรือถึง maxAttempts)
-    /// </summary>
-
-    // 1) ฟังก์ชันตรวจว่าทุก Task ได้อุปกรณ์ครบหรือยัง (LED และ ToggleSwitch 6 ตัว)
     private bool AreAllTasksAssigned()
     {
         foreach (var task in tasks)
@@ -643,44 +666,13 @@ public class QuizManager2 : MonoBehaviour
         return true;
     }
 
-    private IEnumerator OnEnableDelay()
-    {
-        yield return new WaitForSeconds(0.5f); // หน่วงเวลา 0.5 วินาที
-        StartCoroutine(ExtendedScanAndAssignObjectsCoroutine());
-    }
-
-    private void OnEnable()
-    {
-        Debug.Log("QuizManager2 OnEnable เรียกใช้งาน");
-        StartCoroutine(OnEnableDelay());
-    }
-    private void OnDisable()
-    {
-        // 1) เคลียร์การผูกอุปกรณ์ของทุก Task
-        for (int i = 0; i < tasks.Count; i++)
-        {
-            tasks[i].ledToCheck = null;
-            for (int j = 0; j < tasks[i].toggleSwitches.Length; j++)
-            {
-                tasks[i].toggleSwitches[j] = null;
-            }
-        }
-
-        // 2) รีเซ็ตคะแนนและข้อความ
-        totalScore = 0;
-        resultMessage = "";
-
-        Debug.Log("[QuizManager2] OnDisable: รีเซ็ตค่า tasks[], totalScore, และ resultMessage เรียบร้อยแล้ว");
-    }
-    // 2) ฟังก์ชัน ExtendedScanAndAssignObjectsCoroutine
     public IEnumerator ExtendedScanAndAssignObjectsCoroutine()
     {
-        int maxAttempts = 20; // จำนวนครั้งสูงสุดที่เราจะพยายามสแกน
+        int maxAttempts = 20;
         int attempt = 0;
 
         while (!AreAllTasksAssigned() && attempt < maxAttempts)
         {
-            // สแกนหาอุปกรณ์ทั้งหมดในฉาก
             LED[] allLEDs = FindObjectsOfType<LED>();
             ToggleSwitch[] allToggles = FindObjectsOfType<ToggleSwitch>();
 
@@ -688,34 +680,65 @@ public class QuizManager2 : MonoBehaviour
             {
                 LogicTask task = tasks[i];
 
-                // Assign LED ถ้ายังว่าง
-                if (task.ledToCheck == null && allLEDs.Length > 0)
+                if (task.ledToCheck == null)
                 {
-                    task.ledToCheck = allLEDs[0];
-                    Debug.Log($"[Task {i + 1}] (Extended) Assign LED {allLEDs[0].name}");
+                    if (!string.IsNullOrEmpty(task.wantedLedName))
+                    {
+                        foreach (var led in allLEDs)
+                        {
+                            if (string.Equals(led.gameObject.name, task.wantedLedName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                task.ledToCheck = led;
+                                Debug.Log($"[Task {i + 1}] (Extended) พบ LED \"{led.gameObject.name}\" ตรงกับ wantedLedName");
+                                break;
+                            }
+                        }
+                    }
+                    if (task.ledToCheck == null && allLEDs.Length > 0)
+                    {
+                        task.ledToCheck = allLEDs[0];
+                        Debug.Log($"[Task {i + 1}] (Extended) fallback assign LED \"{allLEDs[0].gameObject.name}\"");
+                    }
                 }
 
-                // Assign ToggleSwitch ทั้ง 6 ตัว
                 for (int j = 0; j < task.toggleSwitches.Length; j++)
                 {
                     if (task.toggleSwitches[j] == null)
                     {
-                        foreach (var tog in allToggles)
+                        if (task.wantedToggleNames != null && j < task.wantedToggleNames.Length &&
+                            !string.IsNullOrEmpty(task.wantedToggleNames[j]))
                         {
-                            bool usedAlready = false;
-                            for (int k = 0; k < task.toggleSwitches.Length; k++)
+                            string wantedName = task.wantedToggleNames[j];
+                            foreach (var tog in allToggles)
                             {
-                                if (task.toggleSwitches[k] == tog)
+                                if (string.Equals(tog.gameObject.name, wantedName, StringComparison.OrdinalIgnoreCase))
                                 {
-                                    usedAlready = true;
+                                    task.toggleSwitches[j] = tog;
+                                    Debug.Log($"[Task {i + 1}] (Extended) พบ ToggleSwitch \"{tog.gameObject.name}\" ตรงกับ wantedToggleNames[{j}]");
                                     break;
                                 }
                             }
-                            if (!usedAlready)
+                        }
+
+                        if (task.toggleSwitches[j] == null)
+                        {
+                            foreach (var tog in allToggles)
                             {
-                                task.toggleSwitches[j] = tog;
-                                Debug.Log($"[Task {i + 1}] (Extended) fallback assign ToggleSwitch {tog.name} to index {j}");
-                                break;
+                                bool alreadyUsed = false;
+                                for (int k = 0; k < task.toggleSwitches.Length; k++)
+                                {
+                                    if (task.toggleSwitches[k] == tog)
+                                    {
+                                        alreadyUsed = true;
+                                        break;
+                                    }
+                                }
+                                if (!alreadyUsed)
+                                {
+                                    task.toggleSwitches[j] = tog;
+                                    Debug.Log($"[Task {i + 1}] (Extended) fallback assign ToggleSwitch \"{tog.gameObject.name}\" ที่ index {j}");
+                                    break;
+                                }
                             }
                         }
                     }
@@ -723,16 +746,12 @@ public class QuizManager2 : MonoBehaviour
             }
 
             attempt++;
-            yield return new WaitForSeconds(0.5f); // รอครึ่งวินาทีก่อนสแกนซ้ำ
+            yield return new WaitForSeconds(0.5f);
         }
 
         if (AreAllTasksAssigned())
-        {
-            Debug.Log("ExtendedScanAndAssignObjectsCoroutine: Assign ครบทุก Task แล้ว");
-        }
+            Debug.Log("ExtendedScanAndAssignObjects: Assign ครบทุก Task แล้ว");
         else
-        {
-            Debug.LogWarning("ExtendedScanAndAssignObjectsCoroutine: ยังไม่ assign ครบหลังจากลองหลายครั้ง");
-        }
+            Debug.LogWarning("ExtendedScanAndAssignObjects: ยังไม่ assign ครบหลังจากลองหลายครั้ง");
     }
 }

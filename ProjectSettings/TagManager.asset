@@ -23,6 +23,8 @@ TagManager:
   - Resistor
   - Digital
   - Exam
+  - Quiz2
+  - Quiz3
   layers:
   - Default
   - TransparentFX
