@@ -7,11 +7,14 @@ public class CanvasSwitcherExam : MonoBehaviour
 
     public GameObject Exam;
 
+    public GameObject Showsavegame;
+
     public void ResetAllPage()
     {
         ShowDetailExam.SetActive(false);
 
         Exam.SetActive(false);
+         Showsavegame.SetActive(false);
     }
     // เรียกเมื่อกดปุ่ม EX1
     public void ShowDetailExamPage()
@@ -24,5 +27,9 @@ public class CanvasSwitcherExam : MonoBehaviour
         Exam.SetActive(true);
     }
 
+ public void ShowsaveGame()
+    {   ResetAllPage();
+        Showsavegame.SetActive(true);
+    }
     
 }

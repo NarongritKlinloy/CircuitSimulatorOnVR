@@ -153,9 +153,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
-
-
-app.post("/api/save", async (req, res) => {
+app.post("/api/savesocre", async (req, res) => {
   const saveData = req.body;
   if (!saveData) {
     return res.status(400).json({ error: "No save data provided" });
@@ -169,14 +167,14 @@ app.post("/api/save", async (req, res) => {
       score = saveData.quizData.score;
     }
 
-    let practiceJson = "{}";
+    // ใช้ digitalDataJson แทน practiceData
+    let digitalJson = "{}";
     if (
-      saveData.practiceData &&
-      typeof saveData.practiceData.json === "string"
+      saveData.digitalDataJson &&
+      typeof saveData.digitalDataJson === "string" &&
+      saveData.digitalDataJson.trim().length > 0
     ) {
-      if (saveData.practiceData.json.trim().length > 0) {
-        practiceJson = saveData.practiceData.json;
-      }
+      digitalJson = saveData.digitalDataJson;
     }
 
     console.log("Saving data for user:", userId, "practiceId:", practiceId);
@@ -189,7 +187,7 @@ app.post("/api/save", async (req, res) => {
       userId,
       practiceId,
       score,
-      practiceJson,
+      digitalJson,
     ]);
 
     console.log(`Save data inserted with id: ${result.insertId}`);
@@ -205,12 +203,22 @@ app.post("/api/save", async (req, res) => {
 
 app.get("/api/load", async (req, res) => {
   try {
-    const sql = "SELECT * FROM practice_save ORDER BY submit_date DESC LIMIT 1";
+    const sql =
+      "SELECT uid, practice_id, submit_date, score, digital_json FROM practice_save ORDER BY submit_date DESC LIMIT 1";
     const [rows] = await db.query(sql);
+
     if (rows.length === 0) {
       return res.status(404).json({ error: "No save data found" });
     }
-    res.json(rows[0]);
+
+    // ส่ง JSON ที่โหลดได้กลับไปให้ Unity
+    res.json({
+      userId: rows[0].uid,
+      practiceId: rows[0].practice_id,
+      submitDate: rows[0].submit_date,
+      quizData: { score: rows[0].score },
+      digitalDataJson: rows[0].digital_json,
+    });
   } catch (error) {
     console.error("Error loading game data:", error);
     res.status(500).json({ error: error.message });
@@ -225,7 +233,7 @@ app.post("/api/simulator/save", async (req, res) => {
     if (!userId || !saveJson) {
       return res.status(400).json({ error: "userId or saveJson is missing" });
     }
-   
+
     // นับจำนวน row เฉพาะ userId นี้ เพื่อจะตั้งชื่อ "Save X"
     const getCountSql =
       "SELECT COUNT(*) AS userSaves FROM SimulatorSave WHERE UID = ?";
@@ -380,11 +388,9 @@ app.delete("/api/simulator/deleteById", async (req, res) => {
     const [result] = await db.query(sql, [userId, saveId]);
 
     if (result.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({
-          error: "No save data found or it doesn't belong to this user",
-        });
+      return res.status(404).json({
+        error: "No save data found or it doesn't belong to this user",
+      });
     }
 
     return res.json({ message: "Delete success" });
@@ -394,8 +400,6 @@ app.delete("/api/simulator/deleteById", async (req, res) => {
   }
 });
 
-
- 
 app.get("/api/practice/find/:uid", async (req, res) => {
   const { uid } = req.params;
   try {
@@ -408,7 +412,7 @@ app.get("/api/practice/find/:uid", async (req, res) => {
         AND cp.practice_id = p.practice_id 
       WHERE enroll.uid = ?
     `;
-    
+
     const [rows] = await db.query(sql_find_classroom, [uid]);
     return res.status(200).json(rows);
   } catch (error) {
@@ -416,8 +420,6 @@ app.get("/api/practice/find/:uid", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
-
-
 
 // เริ่มเซิร์ฟเวอร์
 server.listen(PORT, () => {

@@ -37,9 +37,11 @@ public class SpawnManager : MonoBehaviour
     public Transform ledSpawnPoint;
 
     [Header("อ้างอิงไปยัง QuizManager")]
-    public QuizManager3 quizManager; // รองรับ QuizManager3 ด้วย
+    public QuizManager1 quizManager1; // รองรับ QuizManager3 ด้วย
     public QuizManager2 quizManager2;
-    public QuizManager3 quizManager3; // รองรับ QuizManager3 ด้วย
+    /// <summary>
+    /// public QuizManager3 quizManager3; // รองรับ QuizManager3 ด้วย
+    /// </summary>
 
     // เก็บตัวนับ ID ของแต่ละประเภท
     private Dictionary<string, int> objectCount = new Dictionary<string, int>();
@@ -79,18 +81,18 @@ public class SpawnManager : MonoBehaviour
             }
 
             // แจ้งไปยัง QuizManager2 และ QuizManager3 (ถ้ามี)
-             if (quizManager != null)
+             if (quizManager1 != null)
             {
-                quizManager.NotifySpawnedObject(newObj);
+                quizManager1.NotifySpawnedObject(newObj);
             }
             if (quizManager2 != null)
             {
                 quizManager2.NotifySpawnedObject(newObj);
             }
-            if (quizManager3 != null)
-            {
-                quizManager3.NotifySpawnedObject(newObj);
-            }
+            // if (quizManager3 != null)
+            // {
+            //     quizManager3.NotifySpawnedObject(newObj);
+            // }
         }
         else
         {
