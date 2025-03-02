@@ -78,21 +78,13 @@ public class CircuitTesterWithScore : MonoBehaviour
         {
             var circuitComponent = comp.Component;
             if (circuitComponent is IBattery)
-            {
                 countBattery++;
-            }
             if (circuitComponent is Flute)
-            {
                 countFlute++;
-            }
             if (circuitComponent is Switch)
-            {
                 countSwitch++;
-            }
             if ((circuitComponent is IConductor) && !(circuitComponent is Switch))
-            {
                 countWire++;
-            }
         }
 
         Debug.Log("Circuit Test Summary:");
@@ -101,55 +93,56 @@ public class CircuitTesterWithScore : MonoBehaviour
         Debug.Log("Switch count: " + countSwitch);
         Debug.Log("Wire count: " + countWire);
 
-        // ตรวจสอบเงื่อนไขพื้นฐานของการมีอุปกรณ์ครบถ้วน
+        // คำนวณคะแนนแต่ละส่วนโดยใช้ Floor
+        int batteryScore = Mathf.FloorToInt(baseBatteryScore * scale);
+        int fluteScore = Mathf.FloorToInt(baseFluteScore * scale);
+        int switchScore = Mathf.FloorToInt(baseSwitchScore * scale);
+        int wireScore = Mathf.FloorToInt(baseWireScore * scale);
+        int toggleTestScore = Mathf.FloorToInt(baseToggleTestScore * scale);
+
+        // รวมคะแนนที่ได้จากส่วนต่าง ๆ
+        int partialTotal = batteryScore + fluteScore + switchScore + wireScore + toggleTestScore;
+        // คำนวณเศษที่เหลือ (remainder) ที่ต้องเพิ่มเข้าไปให้ผลรวมเท่ากับ maxScore
+        int remainder = maxScore - partialTotal;
+        // เพิ่ม remainder ให้กับส่วน Toggle Test (หรือแจกจ่ายไปตามต้องการ)
+        toggleTestScore += remainder;
+
+        // ตรวจสอบเงื่อนไขพื้นฐาน
         bool pass = true;
-        if (countBattery >= 1)
-        {
-            score += Mathf.RoundToInt(baseBatteryScore * scale);
-            Debug.Log("ผ่าน: Battery (+" + Mathf.RoundToInt(baseBatteryScore * scale) + ")");
-        }
-        else
+        if (countBattery < 1)
         {
             string err = "Test Failed: ต้องมี Battery อย่างน้อย 1 ชิ้น\n";
             Debug.LogError(err);
             ErrorMessage += err;
             pass = false;
         }
-        if (countFlute >= 1)
-        {
-            score += Mathf.RoundToInt(baseFluteScore * scale);
-            Debug.Log("ผ่าน: Flute (Resistor) (+" + Mathf.RoundToInt(baseFluteScore * scale) + ")");
-        }
-        else
+        if (countFlute < 1)
         {
             string err = "Test Failed: ต้องมี Flute (ตัวต้านทาน) อย่างน้อย 1 ชิ้น\n";
             Debug.LogError(err);
             ErrorMessage += err;
             pass = false;
         }
-        if (countSwitch >= 1)
-        {
-            score += Mathf.RoundToInt(baseSwitchScore * scale);
-            Debug.Log("ผ่าน: Switch (+" + Mathf.RoundToInt(baseSwitchScore * scale) + ")");
-        }
-        else
+        if (countSwitch < 1)
         {
             string err = "Test Failed: ต้องมี Switch 1 ชิ้น\n";
             Debug.LogError(err);
             ErrorMessage += err;
             pass = false;
         }
-        if (countWire >= 1)
-        {
-            score += Mathf.RoundToInt(baseWireScore * scale);
-            Debug.Log("ผ่าน: Wire (+" + Mathf.RoundToInt(baseWireScore * scale) + ")");
-        }
-        else
+        if (countWire < 1)
         {
             string err = "Test Failed: ต้องมี Wire อย่างน้อย 1 ชิ้น\n";
             Debug.LogError(err);
             ErrorMessage += err;
             pass = false;
+        }
+
+        // ถ้าผ่านเงื่อนไขพื้นฐานแล้ว ให้รวมคะแนนพื้นฐาน
+        if (pass)
+        {
+            score += batteryScore + fluteScore + switchScore + wireScore;
+            Debug.Log("ผ่าน: คะแนนพื้นฐานรวม = " + (batteryScore + fluteScore + switchScore + wireScore));
         }
 
         // เรียกให้ CircuitLab จำลองวงจรก่อนตรวจสอบ active circuit
@@ -159,7 +152,6 @@ public class CircuitTesterWithScore : MonoBehaviour
         bool batteryActive = false;
         bool fluteActive = false;
         bool switchActive = false;
-
         int currentGen = circuitLab.board.Generation; // ใช้ Generation ของวงจรล่าสุด
         foreach (PlacedComponent pc in circuitLab.board.Components)
         {
@@ -173,7 +165,6 @@ public class CircuitTesterWithScore : MonoBehaviour
                     switchActive = true;
             }
         }
-
         if (!(batteryActive && fluteActive && switchActive))
         {
             string err = "Test Failed: อุปกรณ์บางชิ้น (Battery/Flute/Switch) ไม่ได้อยู่ใน active circuit ร่วมกัน (ขั้ว+ → ขั้ว-)\n";
@@ -195,7 +186,7 @@ public class CircuitTesterWithScore : MonoBehaviour
             Debug.LogError("Circuit composition ไม่ผ่านเงื่อนไขที่กำหนด");
         }
 
-        // ทดสอบการทำงานของ Switch (เฉพาะถ้าวงจรต่อครบ)
+        // ถ้าวงจรผ่านพื้นฐานแล้ว ให้ทดสอบการทำงานของ Switch
         if (pass)
         {
             Switch mySwitch = FindSwitch();
@@ -224,8 +215,9 @@ public class CircuitTesterWithScore : MonoBehaviour
                     Debug.Log("Switch: ปิด (closed) อีกครั้ง - จำลองวงจร");
                     yield return new WaitForSeconds(2f);
                 }
-                score += Mathf.RoundToInt(baseToggleTestScore * scale);
-                Debug.Log("ผ่าน: การสลับสถานะ Switch (+" + Mathf.RoundToInt(baseToggleTestScore * scale) + ")");
+                // เพิ่มคะแนนสำหรับการทดสอบ Switch (ส่วนนี้เราใช้คะแนนที่คำนวณไว้พร้อมกับ remainder)
+                score += toggleTestScore;
+                Debug.Log("ผ่าน: การสลับสถานะ Switch (+" + toggleTestScore + ")");
             }
             else
             {
@@ -311,7 +303,10 @@ public class CircuitTesterWithScore : MonoBehaviour
     // -----------------------------
     // ฟังก์ชัน LoadScore: โหลดคะแนนจาก Database ผ่าน API โดยใช้ practice_id เป็น 3
     // -----------------------------
-
+    public void LoadScore()
+    {
+        StartCoroutine(LoadScoreFromServer());
+    }
 
     private IEnumerator LoadScoreFromServer()
     {
@@ -330,8 +325,9 @@ public class CircuitTesterWithScore : MonoBehaviour
                 Debug.Log("Load Score Success: " + request.downloadHandler.text);
                 // แก้ไข JSON mapping โดยใช้ field "practice_score" แทน "score"
                 ScoreResponseData responseData = JsonUtility.FromJson<ScoreResponseData>(request.downloadHandler.text);
-                // เปลี่ยนค่าของ score ให้ตรงกับคะแนนที่โหลดมาจากฐานข้อมูล
+                // เปลี่ยนค่า maxScore และ score ให้ตรงกับคะแนนที่โหลดมาจากฐานข้อมูล
                 maxScore = responseData.practice_score;
+                score = responseData.practice_score;
                 LoadedScore = responseData.practice_score;
                 Debug.Log("Loaded Score: " + LoadedScore);
             }

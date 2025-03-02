@@ -3,7 +3,7 @@ using UnityEngine;
 public class CanvasSwitcher : MonoBehaviour
 {
     [Header("Canvas ของแต่ละ EX")]
-    //public GameObject ex1Canvas;
+    public GameObject ex1Canvas;
     public GameObject ex2Canvas;
     public GameObject ex3Canvas;
     //public GameObject ShowSaveMode;
@@ -11,10 +11,10 @@ public class CanvasSwitcher : MonoBehaviour
 
     public void ResetMenu()
     {
-        //ex1Canvas.SetActive(false);
+        ex1Canvas.SetActive(false);
         ex2Canvas.SetActive(false);
         ex3Canvas.SetActive(false);
-       // ShowSaveMode.SetActive(false);
+        // ShowSaveMode.SetActive(false);
         //ShowButtonPage.SetActive(false);
 
     }
@@ -26,6 +26,13 @@ public class CanvasSwitcher : MonoBehaviour
     //     //ex1Canvas.SetActive(true);
 
     // }
+    // เรียกเมื่อกดปุ่ม EX2
+    public void ShowExample1()
+    {
+        ResetMenu();
+        ex1Canvas.SetActive(true);
+
+    }
 
     // เรียกเมื่อกดปุ่ม EX2
     public void ShowExample2()
@@ -45,8 +52,8 @@ public class CanvasSwitcher : MonoBehaviour
 
     //public void ShowsaveMode()
     //{
-       // ResetMenu();
-        //ShowSaveMode.SetActive(true);
+    // ResetMenu();
+    //ShowSaveMode.SetActive(true);
     //}
 
     // public void Showbuttonpage()
