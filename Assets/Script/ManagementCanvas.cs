@@ -155,11 +155,11 @@ public class ManagementCanvas : MonoBehaviour
     public void Showpractice()
     {
         ShowMenu(Practice);
-        if (xrOriginObject != null)
-        {
-            xrOriginObject.transform.position = new Vector3(-206.8364f, -93f, 241.2679f);
-        }
-        simulatorObject1.SetActive(true);
+        // if (xrOriginObject != null)
+        // {
+        //     xrOriginObject.transform.position = new Vector3(-206.8364f, -93f, 241.2679f);
+        // }
+        simulatorObject1.SetActive(false);
         simulatorObject2.SetActive(false);
     }
 
