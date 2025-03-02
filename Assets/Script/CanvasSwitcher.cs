@@ -6,16 +6,16 @@ public class CanvasSwitcher : MonoBehaviour
     //public GameObject ex1Canvas;
     public GameObject ex2Canvas;
     public GameObject ex3Canvas;
-    public GameObject ShowSaveMode;
-    public GameObject ShowButtonPage;
+    //public GameObject ShowSaveMode;
+    //public GameObject ShowButtonPage;
 
     public void ResetMenu()
     {
         //ex1Canvas.SetActive(false);
         ex2Canvas.SetActive(false);
         ex3Canvas.SetActive(false);
-        ShowSaveMode.SetActive(false);
-        ShowButtonPage.SetActive(false);
+       // ShowSaveMode.SetActive(false);
+        //ShowButtonPage.SetActive(false);
 
     }
 
@@ -43,16 +43,16 @@ public class CanvasSwitcher : MonoBehaviour
 
     }
 
-    public void ShowsaveMode()
-    {
-        ResetMenu();
-        ShowSaveMode.SetActive(true);
-    }
+    //public void ShowsaveMode()
+    //{
+       // ResetMenu();
+        //ShowSaveMode.SetActive(true);
+    //}
 
-    public void Showbuttonpage()
-    {
-        ResetMenu();
-        ShowButtonPage.SetActive(true);
+    // public void Showbuttonpage()
+    // {
+    //     ResetMenu();
+    //     ShowButtonPage.SetActive(true);
 
-    }
+    // }
 }

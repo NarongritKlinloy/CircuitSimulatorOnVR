@@ -15,6 +15,14 @@ public class GoogleAuthen : MonoBehaviour
     public string loginScene = "LoginScene"; // สำหรับ logout
     public ManagementCanvas managementCanvas;
 
+    // ------------------ เพิ่มส่วนนี้ ------------------
+    [Header("XR Origin")]
+    [Tooltip("ลาก GameObject ที่เป็น XR Origin (หรือ XR Rig) มาใส่")]
+    public GameObject xrOriginObject;
+    // --------------------------------------------------
+    [Header("Object พิเศษ")]
+    public GameObject simulatorObject1;
+    public GameObject simulatorObject2;
     void Start()
     {
         authUrl = "https://accounts.google.com/o/oauth2/auth" +
@@ -50,6 +58,19 @@ public class GoogleAuthen : MonoBehaviour
     IEnumerator LogoutAndSwitchScene()
     {
         yield return new WaitForSeconds(2);
+        if (xrOriginObject != null)
+        {
+            xrOriginObject.transform.position = new Vector3(-206.8364f, -93f, 241.2679f);
+        }
+        // ตัวอย่างการเซ็ต Active ของ simulatorObject
+        if (simulatorObject1 != null)
+        {
+            simulatorObject1.SetActive(true);
+        }
+        if (simulatorObject2 != null)
+        {
+            simulatorObject2.SetActive(true);
+        }
         managementCanvas.ShowLoginGoogle();
 
         // ไม่เปลี่ยน scene แต่สามารถทำการ reset UI ได้ตามต้องการ

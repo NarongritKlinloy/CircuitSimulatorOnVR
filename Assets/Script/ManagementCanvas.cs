@@ -11,7 +11,6 @@ public class ManagementCanvas : MonoBehaviour
     public GameObject modeMenu;
     public GameObject saveMenu;
     public GameObject Mannual;
-
     public GameObject Practice;
 
     [Header("เมนูอื่นๆ")]
@@ -25,15 +24,17 @@ public class ManagementCanvas : MonoBehaviour
 
     [Header("UI สำหรับแสดง UID")]
     public TMP_Text statussaveloaddelete;  // ให้กำหนดอ้างอิงไปยัง TextMeshPro Text ที่จะแสดง UID
-
+    public TMP_Text uidText;               // ให้กำหนดอ้างอิงไปยัง TextMeshPro Text ที่จะแสดง UID
 
     [Header("Object พิเศษ")]
-    //public GameObject mySpecialObject;
     public GameObject simulatorObject1;
     public GameObject simulatorObject2;
+    // ------------------ เพิ่มส่วนนี้ ------------------
+    [Header("XR Origin")]
+    [Tooltip("ลาก GameObject ที่เป็น XR Origin (หรือ XR Rig) มาใส่")]
+    public GameObject xrOriginObject;
+    // --------------------------------------------------
 
-    [Header("UI สำหรับแสดง UID")]
-    public TMP_Text uidText;  // ให้กำหนดอ้างอิงไปยัง TextMeshPro Text ที่จะแสดง UID
 
     private GameObject currentMenu = null; // เก็บหน้าเมนูที่เปิดอยู่ปัจจุบัน
 
@@ -154,10 +155,14 @@ public class ManagementCanvas : MonoBehaviour
     public void Showpractice()
     {
         ShowMenu(Practice);
-
+        if (xrOriginObject != null)
+        {
+            xrOriginObject.transform.position = new Vector3(-206.8364f, -93f, 241.2679f);
+        }
         simulatorObject1.SetActive(true);
         simulatorObject2.SetActive(false);
     }
+
     // เมนูแจ้งเตือน Login ที่จะใช้แสดง UID ที่ได้รับมา
     public void ShowUiNotifyLogin()
     {
@@ -179,10 +184,12 @@ public class ManagementCanvas : MonoBehaviour
     {
         ShowMenu(UiNotifySave);
     }
+
     public void ShowUiNotifyConfrimSave()
     {
         ShowMenu(UiNotifyConfirmSave);
     }
+
     public void ShowUiNotifyLoadSuccess()
     {
         ShowMenu(UiNotifyLoad);
@@ -206,8 +213,6 @@ public class ManagementCanvas : MonoBehaviour
     {
         Debug.Log("Mode Menu Button #1 Pressed (Do nothing yet)");
     }
-
-
 
     public void ModeMenuButton3()
     {
