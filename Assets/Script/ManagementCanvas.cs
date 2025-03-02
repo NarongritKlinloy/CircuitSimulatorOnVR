@@ -15,6 +15,7 @@ public class ManagementCanvas : MonoBehaviour
 
     [Header("เมนูอื่นๆ")]
     public GameObject UiNotifyLogin;
+    public GameObject UiNotifyErrorLogin;
     public GameObject UiNotifyLogout;
     public GameObject UiNotifySave;
     public GameObject UiNotifyConfirmSave;
@@ -173,6 +174,11 @@ public class ManagementCanvas : MonoBehaviour
         {
             uidText.text = "Welcome :" + uid;
         }
+    }
+
+    public void ShowUiNotifyErrorLogin()
+    {
+        ShowMenu(UiNotifyErrorLogin);
     }
 
     public void ShowUiNotifyLogOut()

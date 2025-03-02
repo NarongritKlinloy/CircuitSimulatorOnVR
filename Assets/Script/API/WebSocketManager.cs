@@ -12,6 +12,7 @@ public class WebSocketMessage
 {
     public string accessToken;
     public string userId;
+    public string error;
 }
 
 public class WebSocketManager : MonoBehaviour
@@ -25,12 +26,12 @@ public class WebSocketManager : MonoBehaviour
         try
         {
             await ws.ConnectAsync(new Uri("ws://localhost:8080"), CancellationToken.None);
-            Debug.Log("✅ Connected to WebSocket Server");
+            Debug.Log("Connected to WebSocket Server");
             await ListenForMessages();
         }
         catch (Exception e)
         {
-            Debug.LogError("❌ WebSocket Error: " + e.Message);
+            Debug.LogError("WebSocket Error: " + e.Message);
         }
     }
 
@@ -43,9 +44,8 @@ public class WebSocketManager : MonoBehaviour
             {
                 var result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                Debug.Log("📡 Received from Server: " + message);
+                Debug.Log("📡 Received from Server: " + message); // ตรวจสอบว่ามีข้อความจาก WebSocket
 
-                // พยายามแปลง JSON
                 WebSocketMessage wsData = null;
                 try
                 {
@@ -56,32 +56,47 @@ public class WebSocketManager : MonoBehaviour
                     Debug.LogWarning("Could not parse WebSocket JSON: " + ex.Message);
                 }
 
-                // ถ้า parse สำเร็จ และมี userId
-                if (wsData != null && !string.IsNullOrEmpty(wsData.userId))
+                if (wsData != null)
                 {
-                    // เก็บ userId ลง PlayerPrefs
-                    PlayerPrefs.SetString("userId", wsData.userId);
-                    PlayerPrefs.Save();
-                    Debug.Log("🟢 WebSocket set userId to: " + wsData.userId);
+                    Debug.Log("Parsed Data: userId=" + wsData.userId + ", error=" + (wsData.error ?? "null")); // ตรวจสอบ error
 
-                    if (statusText != null)
-                        statusText.text = "✅ Login Successful via WebSocket!";
-
-                    // ถ้าต้องการเรียก ManagementCanvas ก็ทำได้
-                    // ตัวอย่าง:
-                    ManagementCanvas managementCanvas = FindObjectOfType<ManagementCanvas>();
-                    if (managementCanvas != null)
+                    if (!string.IsNullOrEmpty(wsData.error))
                     {
-                        managementCanvas.ShowUiNotifyLogin();
-                        Debug.Log("ShowUiNotifyLogin() called from WebSocketManager after userId set.");
+                        Debug.LogError("❌ WebSocket received error: " + wsData.error);
+
+                        ManagementCanvas managementCanvas = FindObjectOfType<ManagementCanvas>();
+                        if (managementCanvas != null)
+                        {
+                            managementCanvas.ShowUiNotifyErrorLogin();
+                            Debug.Log("🔹 ShowUiNotifyErrorLogin() called."); //เช็คว่าเรียกจริง
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(wsData.userId))
+                    {
+                        PlayerPrefs.SetString("userId", wsData.userId);
+                        PlayerPrefs.Save();
+                        Debug.Log("User logged in via WebSocket: " + wsData.userId);
+
+                        if (statusText != null)
+                            statusText.text = "Login Successful via WebSocket!";
+
+                        ManagementCanvas managementCanvas = FindObjectOfType<ManagementCanvas>();
+                        if (managementCanvas != null)
+                        {
+                            managementCanvas.ShowUiNotifyLogin();
+                            Debug.Log("🔹 ShowUiNotifyLogin() called.");
+                        }
                     }
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError("❌ Error receiving WebSocket message: " + e.Message);
+                Debug.LogError("Error receiving WebSocket message: " + e.Message);
                 break;
             }
         }
     }
+
+
+
 }
