@@ -311,9 +311,9 @@ app.get("/api/simulator/listSavesDigital", async (req, res) => {
       return res.status(400).json({ error: "No userId provided" });
     }
     const sql = `
-      SELECT simulate_id, simulate_name, simulate_date
+      SELECT circuit_id, simulate_name, simulate_date
       FROM SimulatorSave
-      WHERE UID = ? AND save_type = 0
+      WHERE UID = ?
       ORDER BY simulate_date DESC
     `;
     const [rows] = await db.query(sql, [userId]);
@@ -324,6 +324,7 @@ app.get("/api/simulator/listSavesDigital", async (req, res) => {
   }
 });
 
+
 // (ใหม่) Endpoint สำหรับ SaveCircuit
 app.get("/api/simulator/listSavesCitcuit", async (req, res) => {
   try {
@@ -332,7 +333,7 @@ app.get("/api/simulator/listSavesCitcuit", async (req, res) => {
       return res.status(400).json({ error: "No userId provided" });
     }
     const sql = `
-      SELECT simulate_id, simulate_name, simulate_date
+      SELECT circuit_id, simulate_name, simulate_date
       FROM SimulatorSave
       WHERE UID = ? AND save_type = 1
       ORDER BY simulate_date DESC
@@ -356,7 +357,7 @@ app.get("/api/simulator/loadById", async (req, res) => {
 
     const sql = `
       SELECT * FROM SimulatorSave
-      WHERE UID = ? AND simulate_id = ?
+      WHERE UID = ? AND circuit_id = ?
       LIMIT 1
     `;
     const [rows] = await db.query(sql, [userId, saveId]);
@@ -384,7 +385,7 @@ app.delete("/api/simulator/deleteById", async (req, res) => {
     }
 
     // ลบ row ในตาราง SimulatorSave
-    const sql = "DELETE FROM SimulatorSave WHERE UID = ? AND simulate_id = ?";
+    const sql = "DELETE FROM SimulatorSave WHERE UID = ? AND circuit_id = ?";
     const [result] = await db.query(sql, [userId, saveId]);
 
     if (result.affectedRows === 0) {

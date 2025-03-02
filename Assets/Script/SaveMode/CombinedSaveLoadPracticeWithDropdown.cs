@@ -180,18 +180,18 @@ public class CombinedSaveLoadPracticeWithDropdown : MonoBehaviour
         long oldSelectedId = -1;
         if (oldIndex > 0 && oldIndex - 1 < allUserSaves.Count)
         {
-            oldSelectedId = allUserSaves[oldIndex - 1].simulate_id;
+            oldSelectedId = allUserSaves[oldIndex - 1].circuit_id;
         }
         dropdown.options.Clear();
         dropdown.options.Add(new TMP_Dropdown.OptionData("New Save"));
         foreach (var item in allUserSaves)
         {
-            string displayText = $"{item.simulate_name} ({item.simulate_date})";
+            string displayText = $"{item.circuit_name} ({item.circuit_date})";
             dropdown.options.Add(new TMP_Dropdown.OptionData(displayText));
         }
         if (keepSelection && oldSelectedId != -1)
         {
-            int newIndex = allUserSaves.FindIndex(s => s.simulate_id == oldSelectedId);
+            int newIndex = allUserSaves.FindIndex(s => s.circuit_id == oldSelectedId);
             dropdown.value = (newIndex >= 0) ? newIndex + 1 : 0;
         }
         else
@@ -221,7 +221,7 @@ public class CombinedSaveLoadPracticeWithDropdown : MonoBehaviour
             if (dataIndex >= 0 && dataIndex < allUserSaves.Count)
             {
                 selectedSaveForConfirm = allUserSaves[dataIndex];
-                Debug.Log($"User chooses to overwrite: {selectedSaveForConfirm.simulate_name} (ID={selectedSaveForConfirm.simulate_id})");
+                Debug.Log($"User chooses to overwrite: {selectedSaveForConfirm.circuit_name} (ID={selectedSaveForConfirm.circuit_id})");
                 managementCanvas.ShowUiNotifyConfrimSave();
             }
         }
@@ -231,7 +231,7 @@ public class CombinedSaveLoadPracticeWithDropdown : MonoBehaviour
     {
         if (selectedSaveForConfirm != null)
         {
-            UpdateCombined(selectedSaveForConfirm.simulate_id);
+            UpdateCombined(selectedSaveForConfirm.circuit_id);
             statusSave.text = "Overwriting save data Success!";
             managementCanvas.ShowUiNotifySaveSuccess();
             selectedSaveForConfirm = null;
@@ -254,8 +254,8 @@ public class CombinedSaveLoadPracticeWithDropdown : MonoBehaviour
         if (dataIndex >= 0 && dataIndex < allUserSaves.Count)
         {
             var chosen = allUserSaves[dataIndex];
-            Debug.Log($"User chooses to load: {chosen.simulate_name} (ID={chosen.simulate_id})");
-            LoadCombinedById(chosen.simulate_id);
+            Debug.Log($"User chooses to load: {chosen.circuit_name} (ID={chosen.circuit_id})");
+            LoadCombinedById(chosen.circuit_id);
             statusLoad.text = "Loading save data Success!";
             managementCanvas.ShowUiNotifyLoadSuccess();
         }
@@ -277,7 +277,7 @@ public class CombinedSaveLoadPracticeWithDropdown : MonoBehaviour
         if (dataIndex >= 0 && dataIndex < allUserSaves.Count)
         {
             selectedSaveForConfirm = allUserSaves[dataIndex];
-            Debug.Log($"User chooses to delete: {selectedSaveForConfirm.simulate_name} (ID={selectedSaveForConfirm.simulate_id})");
+            Debug.Log($"User chooses to delete: {selectedSaveForConfirm.circuit_name} (ID={selectedSaveForConfirm.circuit_id})");
             managementCanvas.ShowUiNotifyConfrimDelete();
         }
     }
@@ -286,7 +286,7 @@ public class CombinedSaveLoadPracticeWithDropdown : MonoBehaviour
     {
         if (selectedSaveForConfirm != null)
         {
-            StartCoroutine(DeleteSaveFromServer(selectedSaveForConfirm.simulate_id));
+            StartCoroutine(DeleteSaveFromServer(selectedSaveForConfirm.circuit_id));
             statusDelete.text = "Delete save data Success!";
             managementCanvas.ShowUiNotifyDelete();
             selectedSaveForConfirm = null;
