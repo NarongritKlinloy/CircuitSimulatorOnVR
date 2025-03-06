@@ -19,6 +19,7 @@ public class WebSocketManager : MonoBehaviour
 {
     private ClientWebSocket ws;
     public TMP_Text statusText;
+    public GoogleAuthen googleAuthen; // เพิ่ม GoogleAuthen เพื่อเรียกใช้ SendLogToServer()
 
     async void Start()
     {
@@ -26,12 +27,12 @@ public class WebSocketManager : MonoBehaviour
         try
         {
             await ws.ConnectAsync(new Uri("ws://localhost:8080"), CancellationToken.None);
-            Debug.Log("Connected to WebSocket Server");
+            Debug.Log("✅ Connected to WebSocket Server");
             await ListenForMessages();
         }
         catch (Exception e)
         {
-            Debug.LogError("WebSocket Error: " + e.Message);
+            Debug.LogError("❌ WebSocket Error: " + e.Message);
         }
     }
 
@@ -44,7 +45,7 @@ public class WebSocketManager : MonoBehaviour
             {
                 var result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                Debug.Log("📡 Received from Server: " + message); // ตรวจสอบว่ามีข้อความจาก WebSocket
+                Debug.Log("📡 Received from Server: " + message);
 
                 WebSocketMessage wsData = null;
                 try
@@ -53,29 +54,28 @@ public class WebSocketManager : MonoBehaviour
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogWarning("Could not parse WebSocket JSON: " + ex.Message);
+                    Debug.LogWarning("❌ Could not parse WebSocket JSON: " + ex.Message);
                 }
 
                 if (wsData != null)
                 {
-                    Debug.Log("Parsed Data: userId=" + wsData.userId + ", error=" + (wsData.error ?? "null")); // ตรวจสอบ error
+                    Debug.Log("✅ Parsed Data: userId=" + wsData.userId + ", error=" + (wsData.error ?? "null"));
 
                     if (!string.IsNullOrEmpty(wsData.error))
                     {
                         Debug.LogError("❌ WebSocket received error: " + wsData.error);
-
                         ManagementCanvas managementCanvas = FindObjectOfType<ManagementCanvas>();
                         if (managementCanvas != null)
                         {
                             managementCanvas.ShowUiNotifyErrorLogin();
-                            Debug.Log("🔹 ShowUiNotifyErrorLogin() called."); //เช็คว่าเรียกจริง
+                            Debug.Log("🔹 ShowUiNotifyErrorLogin() called.");
                         }
                     }
                     else if (!string.IsNullOrEmpty(wsData.userId))
                     {
                         PlayerPrefs.SetString("userId", wsData.userId);
                         PlayerPrefs.Save();
-                        Debug.Log("User logged in via WebSocket: " + wsData.userId);
+                        Debug.Log("✅ User logged in via WebSocket: " + wsData.userId);
 
                         if (statusText != null)
                             statusText.text = "Login Successful via WebSocket!";
@@ -86,17 +86,25 @@ public class WebSocketManager : MonoBehaviour
                             managementCanvas.ShowUiNotifyLogin();
                             Debug.Log("🔹 ShowUiNotifyLogin() called.");
                         }
+
+                        // ✅ เรียก GoogleAuthen เพื่อส่ง Log
+                        if (googleAuthen != null)
+                        {
+                            Debug.Log("📌 Calling SendLogToServer() from WebSocketManager...");
+                            googleAuthen.StartCoroutine(googleAuthen.SendLogToServer(wsData.userId));
+                        }
+                        else
+                        {
+                            Debug.LogError("❌ googleAuthen is NULL, cannot send log.");
+                        }
                     }
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError("Error receiving WebSocket message: " + e.Message);
+                Debug.LogError("❌ Error receiving WebSocket message: " + e.Message);
                 break;
             }
         }
     }
-
-
-
 }
