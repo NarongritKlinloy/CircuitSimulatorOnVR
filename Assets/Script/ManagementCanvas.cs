@@ -43,7 +43,7 @@ public class ManagementCanvas : MonoBehaviour
     {
         // เริ่มต้นเปิดหน้า LoginGoogle
         ShowLoginGoogle();
-
+        //ShowMainMenu();
         // ตัวอย่างการเซ็ต Active ของ simulatorObject
         if (simulatorObject1 != null)
             simulatorObject1.SetActive(true);

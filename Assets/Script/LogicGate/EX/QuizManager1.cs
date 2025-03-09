@@ -80,7 +80,7 @@ public class QuizManager1 : MonoBehaviour
             yield break;
         }
 
-        string url = "http://localhost:5000/api/practice/" + practiceId;
+        string url = "https://smith11.ce.kmitl.ac.th/api/practice/" + practiceId;
         using (UnityWebRequest request = UnityWebRequest.Get(url))
         {
             yield return request.SendWebRequest();
@@ -249,7 +249,7 @@ public class QuizManager1 : MonoBehaviour
         requestData.quizData.score = score;
 
         string jsonBody = JsonUtility.ToJson(requestData);
-        string url = "http://localhost:5000/api/saveScore";
+        string url = "https://smith11.ce.kmitl.ac.th/api/saveScore";
 
         using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
         {
@@ -263,13 +263,69 @@ public class QuizManager1 : MonoBehaviour
             if (request.result == UnityWebRequest.Result.Success)
             {
                 Debug.Log("Score saved successfully! Response: " + request.downloadHandler.text);
+                StartCoroutine(SendLogToServer(userId, 1, practiceId));
+
             }
-            else
+            else      
             {
                 Debug.LogError("Error saving score: " + request.error);
             }
         }
     }
+ public IEnumerator SendLogToServer(string userId, int logType, int practiceId)
+    {
+        if (string.IsNullOrEmpty(userId))
+        {
+            Debug.LogError("❌ SendLogToServer() called with EMPTY userId!");
+            yield break;
+        }
+
+        string logUrl = "https://smith11.ce.kmitl.ac.th/api/log/visitunity";
+
+        // ✅ เปลี่ยนจาก Anonymous Object -> Explicit Class เพื่อให้ JsonUtility ใช้งานได้
+        LogData logData = new LogData
+        {
+            uid = userId,
+            log_type = logType,
+            practice_id = practiceId
+        };
+
+        string jsonPayload = JsonUtility.ToJson(logData);
+        Debug.Log($"📌 Sending log data: {jsonPayload} (userId: {userId})"); // ✅ Debug JSON Payload
+
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonPayload);
+
+        using (UnityWebRequest request = new UnityWebRequest(logUrl, "POST"))
+        {
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            Debug.Log($"📌 Response Code: {request.responseCode}");
+            Debug.Log($"📌 Response Text: {request.downloadHandler.text}");
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError($"❌ Failed to send log data: {request.error}");
+            }
+            else
+            {
+                Debug.Log($"✅ Log data sent successfully: {request.downloadHandler.text}");
+            }
+        }
+    }
+
+    // ✅ เพิ่มคลาสนี้เพื่อให้ JsonUtility ใช้งานได้
+    [Serializable]
+    public class LogData
+    {
+        public string uid;
+        public int log_type;
+        public int practice_id;
+    }
+
 
     // -----------------------------
     // 7) บังคับอัปเดตวงจร

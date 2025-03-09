@@ -7,22 +7,22 @@ using UnityEngine.Networking;
 public class GoogleAuthen : MonoBehaviour
 {
     public TMP_Text statusText;
-    private string clientId = "382397535757-jlr6pk7k9ibtdja6mustqm1p426t4c1j.apps.googleusercontent.com";
-    private string redirectUri = "http://localhost:5000/callback";
+    private string clientId = "536241701089-ej2lkeskgljs17a9dp6d3eeorfhb2f2e.apps.googleusercontent.com";
+    private string redirectUri = "https://smith11.ce.kmitl.ac.th/callback";
     private string authUrl;
-    private string serverUrl = "http://localhost:5000/register";
-    // ไม่ต้องเปลี่ยน sceneอีกต่อไป
-    public string loginScene = "LoginScene"; // สำหรับ logout
+    private string serverUrl = "https://smith11.ce.kmitl.ac.th/register";
+
+    public string loginScene = "LoginScene"; // ✅ ไม่ต้องเปลี่ยน Scene
     public ManagementCanvas managementCanvas;
 
-    // ------------------ เพิ่มส่วนนี้ ------------------
     [Header("XR Origin")]
     [Tooltip("ลาก GameObject ที่เป็น XR Origin (หรือ XR Rig) มาใส่")]
     public GameObject xrOriginObject;
-    // --------------------------------------------------
+
     [Header("Object พิเศษ")]
     public GameObject simulatorObject1;
     public GameObject simulatorObject2;
+
     void Start()
     {
         authUrl = "https://accounts.google.com/o/oauth2/auth" +
@@ -41,16 +41,16 @@ public class GoogleAuthen : MonoBehaviour
         Debug.Log("🔹 Opening Google Login: " + authUrl);
         Application.OpenURL(authUrl);
     }
+
     IEnumerator Wiat()
     {
         yield return new WaitForSeconds(2);
-        // ไม่เปลี่ยน scene แต่สามารถทำการ reset UI ได้ตามต้องการ
     }
+
     public void OnLogout()
     {
         Debug.Log("🔹 Logging out...");
-        PlayerPrefs.DeleteKey("accessToken");
-        PlayerPrefs.DeleteKey("userId");
+        PlayerPrefs.DeleteKey("userId"); // ✅ ลบ userId ออกจาก PlayerPrefs
         PlayerPrefs.Save();
         StartCoroutine(LogoutAndSwitchScene());
     }
@@ -62,31 +62,23 @@ public class GoogleAuthen : MonoBehaviour
         {
             xrOriginObject.transform.position = new Vector3(-206.8364f, -93f, 241.2679f);
         }
-        // ตัวอย่างการเซ็ต Active ของ simulatorObject
-        if (simulatorObject1 != null)
-        {
-            simulatorObject1.SetActive(true);
-        }
-        if (simulatorObject2 != null)
-        {
-            simulatorObject2.SetActive(true);
-        }
-        managementCanvas.ShowLoginGoogle();
 
-        // ไม่เปลี่ยน scene แต่สามารถทำการ reset UI ได้ตามต้องการ
+        if (simulatorObject1 != null) simulatorObject1.SetActive(true);
+        if (simulatorObject2 != null) simulatorObject2.SetActive(true);
+
+        managementCanvas.ShowLoginGoogle();
     }
 
     void OnDeepLink(string url)
     {
         Debug.Log("🔹 Received Deep Link: " + url);
         string token = ExtractTokenFromURL(url);
+
         if (!string.IsNullOrEmpty(token))
-        {
+        {   
+            ReturnToUnityApp(); // 🔄 กลับเข้าเกมด้วย Android Intent
             Debug.Log("✅ Extracted Token: " + token);
-            // เก็บ accessToken ชั่วคราว (ถ้าอยากใช้)
-            PlayerPrefs.SetString("accessToken", token);
-            PlayerPrefs.Save();
-            // เรียก /register เพื่อให้ server ลงทะเบียน/อัปเดต user
+
             StartCoroutine(SendUserDataToServer(token));
         }
         else
@@ -96,14 +88,35 @@ public class GoogleAuthen : MonoBehaviour
         }
     }
 
-    // สำหรับจำลอง deep link ใน Editor
-    void SimulateDeepLink(string url)
+    // ✅ ฟังก์ชันนี้ช่วยปิด Browser และสลับกลับเกม
+    void ReturnToUnityApp()
     {
-        Debug.Log("Simulating deep link: " + url);
-        OnDeepLink(url);
+#if UNITY_ANDROID
+        try
+        {
+            AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            AndroidJavaObject currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+            AndroidJavaObject packageManager = currentActivity.Call<AndroidJavaObject>("getPackageManager");
+            string packageName = currentActivity.Call<string>("getPackageName");
+            AndroidJavaObject launchIntent = packageManager.Call<AndroidJavaObject>("getLaunchIntentForPackage", packageName);
+
+            if (launchIntent != null)
+            {
+                currentActivity.Call("startActivity", launchIntent);
+                Debug.Log("🔄 Returning to Unity App...");
+            }
+            else
+            {
+                Debug.LogError("❌ Could not create launch intent for package: " + packageName);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("❌ Error returning to Unity App: " + e.Message);
+        }
+#endif
     }
 
-    // ส่ง accessToken ไปยังเซิร์ฟเวอร์เป็น JSON payload (เพื่อ register user)
     IEnumerator SendUserDataToServer(string accessToken)
     {
         string jsonPayload = JsonUtility.ToJson(new { accessToken = accessToken });
@@ -117,11 +130,7 @@ public class GoogleAuthen : MonoBehaviour
 
             yield return request.SendWebRequest();
 
-#if UNITY_2020_1_OR_NEWER
             if (request.result != UnityWebRequest.Result.Success)
-#else
-            if (request.isNetworkError || request.isHttpError)
-#endif
             {
                 Debug.LogError("❌ Failed to send user data: " + request.error);
                 UpdateStatusText("❌ Failed to send data: " + request.error);
@@ -132,15 +141,12 @@ public class GoogleAuthen : MonoBehaviour
                 UserResponse userResponse = JsonUtility.FromJson<UserResponse>(request.downloadHandler.text);
                 if (userResponse != null && !string.IsNullOrEmpty(userResponse.userId))
                 {
-                    // เก็บ userId จาก HTTP response ไว้ใน PlayerPrefs ได้อีกทาง (เผื่อ fallback)
+                    // ✅ เปลี่ยนเป็นใช้ PlayerPrefs แทน
                     PlayerPrefs.SetString("userId", userResponse.userId);
                     PlayerPrefs.Save();
-                    Debug.Log("🔹 Stored userId in PlayerPrefs: " + PlayerPrefs.GetString("userId"));
+
+                    Debug.Log("🔹 Stored userId in PlayerPrefs: " + userResponse.userId);
                     UpdateStatusText("✅ Login successful! Welcome " + userResponse.userId);
-
-                    // ส่ง log เมื่อ login สำเร็จ
-                    Debug.Log("📌 Calling SendLogToServer() for user: " + userResponse.userId);
-
                     StartCoroutine(SendLogToServer(userResponse.userId));
                 }
                 else
@@ -151,6 +157,7 @@ public class GoogleAuthen : MonoBehaviour
             }
         }
     }
+
     public IEnumerator SendLogToServer(string userId)
     {
         if (string.IsNullOrEmpty(userId))
@@ -159,9 +166,8 @@ public class GoogleAuthen : MonoBehaviour
             yield break;
         }
 
-        string logUrl = "http://localhost:5000/api/log/visit";
+        string logUrl = "https://smith11.ce.kmitl.ac.th/api/log/visitunity";
 
-        // ✅ เปลี่ยนจาก Anonymous Object -> Explicit Class เพื่อให้ JsonUtility ใช้งานได้
         LogData logData = new LogData
         {
             uid = userId,
@@ -170,8 +176,6 @@ public class GoogleAuthen : MonoBehaviour
         };
 
         string jsonPayload = JsonUtility.ToJson(logData);
-        Debug.Log($"📌 Sending log data: {jsonPayload} (userId: {userId})"); // ✅ Debug JSON Payload
-
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonPayload);
 
         using (UnityWebRequest request = new UnityWebRequest(logUrl, "POST"))
@@ -196,7 +200,6 @@ public class GoogleAuthen : MonoBehaviour
         }
     }
 
-    // ✅ เพิ่มคลาสนี้เพื่อให้ JsonUtility ใช้งานได้
     [Serializable]
     public class LogData
     {
@@ -205,8 +208,6 @@ public class GoogleAuthen : MonoBehaviour
         public int practice_id;
     }
 
-
-
     [Serializable]
     public class UserResponse
     {
@@ -214,31 +215,15 @@ public class GoogleAuthen : MonoBehaviour
         public string userId;
     }
 
-    // ดึง accessToken จาก URL
     string ExtractTokenFromURL(string url)
     {
         try
         {
             Uri uri = new Uri(url);
-            // parse fragment (#)
             if (!string.IsNullOrEmpty(uri.Fragment))
             {
                 string fragment = uri.Fragment.StartsWith("#") ? uri.Fragment.Substring(1) : uri.Fragment;
                 var queryParams = fragment.Split('&');
-                foreach (string param in queryParams)
-                {
-                    string[] keyValue = param.Split('=');
-                    if (keyValue.Length == 2 && keyValue[0] == "access_token")
-                    {
-                        return keyValue[1];
-                    }
-                }
-            }
-            // parse query (?)
-            if (!string.IsNullOrEmpty(uri.Query))
-            {
-                string query = uri.Query.TrimStart('?');
-                var queryParams = query.Split('&');
                 foreach (string param in queryParams)
                 {
                     string[] keyValue = param.Split('=');
@@ -264,7 +249,7 @@ public class GoogleAuthen : MonoBehaviour
             statusText.text = message;
         }
     }
-    // ฟังก์ชันใหม่สำหรับเปิดเบราว์เซอร์ภายนอกและไปที่ Google
+
     public void OpenGoogle()
     {
         Debug.Log("🔹 Opening Google in external browser");

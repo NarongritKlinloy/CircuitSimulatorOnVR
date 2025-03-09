@@ -6,7 +6,7 @@ using TMPro;
 public class ToggleObjects : MonoBehaviour
 {
     [Header("URL ของ API (ไม่ต้องต่อท้าย UID)")]
-    public string apiUrl = "http://localhost:5000/api/practice/find/";
+    public string apiUrl = "https://smith11.ce.kmitl.ac.th/api/practice/find/";
 
     [Header("ช่วงเวลาที่จะเช็คซ้ำ (วินาที)")]
     public float pollingInterval = 5f;

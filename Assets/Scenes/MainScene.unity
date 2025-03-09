@@ -25353,7 +25353,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7841679646455993023, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_Text
-      value: Example 3
+      value: Practice 3
       objectReference: {fileID: 0}
     - target: {fileID: 7841679646455993023, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_FontData.m_Font
@@ -25373,7 +25373,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8454748531681350992, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9142516060564844685, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_Pivot.x
@@ -27141,7 +27141,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e000fc5fc4c6cb44da184073a2094804, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  apiUrl: http://localhost:5000/api/practice/find/
+  apiUrl: https://smith11.ce.kmitl.ac.th/api/practice/find/
   pollingInterval: 5
   toggleItems:
   - targetObject: {fileID: 1831817118}
@@ -31695,7 +31695,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7841679646455993023, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_Text
-      value: Example 1
+      value: Practice 1
       objectReference: {fileID: 0}
     - target: {fileID: 7841679646455993023, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_FontData.m_Font
@@ -31715,7 +31715,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8454748531681350992, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9142516060564844685, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_Pivot.x
@@ -43497,7 +43497,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7841679646455993023, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_Text
-      value: Example 2
+      value: Practice 2
       objectReference: {fileID: 0}
     - target: {fileID: 7841679646455993023, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_FontData.m_Font
@@ -43517,7 +43517,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8454748531681350992, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9142516060564844685, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_Pivot.x
@@ -49209,6 +49209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   statusText: {fileID: 0}
+  googleAuthen: {fileID: 784148251}
 --- !u!4 &1603345233
 Transform:
   m_ObjectHideFlags: 0
@@ -54751,9 +54752,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d094340445898be49a3e79a51e0f8c3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  apiSaveUrl: http://localhost:5000/api/simulator/save
-  apiLoadUrl: http://localhost:5000/api/simulator/load
-  apiLoadByIdUrl: http://localhost:5000/api/simulator/loadById
+  apiSaveUrl: https://smith11.ce.kmitl.ac.th/api/simulator/save
+  apiLoadUrl: https://smith11.ce.kmitl.ac.th/api/simulator/load
+  apiLoadByIdUrl: https://smith11.ce.kmitl.ac.th/api/simulator/loadById
   saveTypeCombined: 0
   availablePrefabs:
   - {fileID: 1897643511}
@@ -54785,7 +54786,7 @@ MonoBehaviour:
   - JKFlipFlop
   - LED
   loadCooldown: 0.4
-  apiUpdateUrl: http://localhost:5000/api/simulator/update
+  apiUpdateUrl: https://smith11.ce.kmitl.ac.th/api/simulator/update
 --- !u!4 &1812089163
 Transform:
   m_ObjectHideFlags: 0
@@ -62094,7 +62095,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1787829294905303417, guid: 11be42432e00dcc4ba7b2bcaa750b5b7, type: 3}
       propertyPath: m_Text
-      value: Circuit Simmulator On VR
+      value: Circuit Simulator On VR
       objectReference: {fileID: 0}
     - target: {fileID: 2255369851968900533, guid: 11be42432e00dcc4ba7b2bcaa750b5b7, type: 3}
       propertyPath: m_Pivot.x
@@ -62138,7 +62139,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2255369851968900533, guid: 11be42432e00dcc4ba7b2bcaa750b5b7, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.051
+      value: -0.050995994
       objectReference: {fileID: 0}
     - target: {fileID: 2255369851968900533, guid: 11be42432e00dcc4ba7b2bcaa750b5b7, type: 3}
       propertyPath: m_LocalRotation.w
@@ -62158,11 +62159,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2255369851968900533, guid: 11be42432e00dcc4ba7b2bcaa750b5b7, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 50
+      value: 49.999992
       objectReference: {fileID: 0}
     - target: {fileID: 2255369851968900533, guid: 11be42432e00dcc4ba7b2bcaa750b5b7, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 50.000008
+      value: 50.00001
       objectReference: {fileID: 0}
     - target: {fileID: 2255369851968900533, guid: 11be42432e00dcc4ba7b2bcaa750b5b7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

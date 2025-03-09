@@ -80,7 +80,7 @@ public class SaveLoadDropdownManager : MonoBehaviour
             yield break;
         }
 
-        string url = "http://localhost:5000/api/simulator/listSavesDigital?userId=" + userId;
+        string url = "https://smith11.ce.kmitl.ac.th/api/simulator/listSavesDigital?userId=" + userId;
         using (UnityWebRequest req = UnityWebRequest.Get(url))
         {
             yield return req.SendWebRequest();
@@ -246,7 +246,7 @@ public class SaveLoadDropdownManager : MonoBehaviour
             yield break;
         }
 
-        string url = $"http://localhost:5000/api/simulator/deleteById?userId={userId}&saveId={saveId}";
+        string url = $"https://smith11.ce.kmitl.ac.th/api/simulator/deleteById?userId={userId}&saveId={saveId}";
         using (UnityWebRequest req = UnityWebRequest.Delete(url))
         {
             yield return req.SendWebRequest();

@@ -19,10 +19,10 @@ public class SaveLoadManager2 : MonoBehaviour
     private string saveFileName = "saveFileDigital.json";
     // ^ ไม่ได้ใช้แล้วแต่เก็บไว้เฉย ๆ
 
-    private string apiSaveUrl = "http://localhost:5000/api/simulator/save";
-    private string apiLoadUrl = "http://localhost:5000/api/simulator/load";
+    private string apiSaveUrl = "https://smith11.ce.kmitl.ac.th/api/simulator/save";
+    private string apiLoadUrl = "https://smith11.ce.kmitl.ac.th/api/simulator/load";
     // เพิ่มใหม่ไว้ใช้สำหรับ loadById
-    private string apiLoadByIdUrl = "http://localhost:5000/api/simulator/loadById";
+    private string apiLoadByIdUrl = "https://smith11.ce.kmitl.ac.th/api/simulator/loadById";
 
     [System.Serializable]
     public class DeviceData

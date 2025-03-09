@@ -1,4 +1,4 @@
-using System.Collections;
+  using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -107,9 +107,9 @@ public class ServerLoadResponse
 public class CombinedSaveLoadManager : MonoBehaviour
 {
     // API endpoints
-    public string apiSaveUrl = "http://localhost:5000/api/simulator/save";
-    public string apiLoadUrl = "http://localhost:5000/api/simulator/load";
-    public string apiLoadByIdUrl = "http://localhost:5000/api/simulator/loadById";
+    public string apiSaveUrl = "https://smith11.ce.kmitl.ac.th/api/simulator/save";
+    public string apiLoadUrl = "https://smith11.ce.kmitl.ac.th/api/simulator/load";
+    public string apiLoadByIdUrl = "https://smith11.ce.kmitl.ac.th/api/simulator/loadById";
 
     // Save type สำหรับ combined (เช่น ใช้ค่า 2 เพื่อระบุว่าข้อมูลเป็นแบบผสม)
     public int saveTypeCombined = 2;
@@ -368,7 +368,7 @@ public class CombinedSaveLoadManager : MonoBehaviour
         isSaving = false;
     }
 
-    public string apiUpdateUrl = "http://localhost:5000/api/simulator/update";
+    public string apiUpdateUrl = "https://smith11.ce.kmitl.ac.th/api/simulator/update";
 
     public void UpdateCombined(long saveId)
     {
