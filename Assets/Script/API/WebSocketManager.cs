@@ -12,12 +12,14 @@ public class WebSocketMessage
 {
     public string accessToken;
     public string userId;
+    public string error;
 }
 
 public class WebSocketManager : MonoBehaviour
 {
     private ClientWebSocket ws;
     public TMP_Text statusText;
+    public GoogleAuthen googleAuthen; // เพิ่ม GoogleAuthen เพื่อเรียกใช้ SendLogToServer()
 
     async void Start()
     {
@@ -45,7 +47,6 @@ public class WebSocketManager : MonoBehaviour
                 string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
                 Debug.Log("📡 Received from Server: " + message);
 
-                // พยายามแปลง JSON
                 WebSocketMessage wsData = null;
                 try
                 {
@@ -53,27 +54,49 @@ public class WebSocketManager : MonoBehaviour
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogWarning("Could not parse WebSocket JSON: " + ex.Message);
+                    Debug.LogWarning("❌ Could not parse WebSocket JSON: " + ex.Message);
                 }
 
-                // ถ้า parse สำเร็จ และมี userId
-                if (wsData != null && !string.IsNullOrEmpty(wsData.userId))
+                if (wsData != null)
                 {
-                    // เก็บ userId ลง PlayerPrefs
-                    PlayerPrefs.SetString("userId", wsData.userId);
-                    PlayerPrefs.Save();
-                    Debug.Log("🟢 WebSocket set userId to: " + wsData.userId);
+                    Debug.Log("✅ Parsed Data: userId=" + wsData.userId + ", error=" + (wsData.error ?? "null"));
 
-                    if (statusText != null)
-                        statusText.text = "✅ Login Successful via WebSocket!";
-
-                    // ถ้าต้องการเรียก ManagementCanvas ก็ทำได้
-                    // ตัวอย่าง:
-                    ManagementCanvas managementCanvas = FindObjectOfType<ManagementCanvas>();
-                    if (managementCanvas != null)
+                    if (!string.IsNullOrEmpty(wsData.error))
                     {
-                        managementCanvas.ShowUiNotifyLogin();
-                        Debug.Log("ShowUiNotifyLogin() called from WebSocketManager after userId set.");
+                        Debug.LogError("❌ WebSocket received error: " + wsData.error);
+                        ManagementCanvas managementCanvas = FindObjectOfType<ManagementCanvas>();
+                        if (managementCanvas != null)
+                        {
+                            managementCanvas.ShowUiNotifyErrorLogin();
+                            Debug.Log("🔹 ShowUiNotifyErrorLogin() called.");
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(wsData.userId))
+                    {
+                        PlayerPrefs.SetString("userId", wsData.userId);
+                        PlayerPrefs.Save();
+                        Debug.Log("✅ User logged in via WebSocket: " + wsData.userId);
+
+                        if (statusText != null)
+                            statusText.text = "Login Successful via WebSocket!";
+
+                        ManagementCanvas managementCanvas = FindObjectOfType<ManagementCanvas>();
+                        if (managementCanvas != null)
+                        {
+                            managementCanvas.ShowUiNotifyLogin();
+                            Debug.Log("🔹 ShowUiNotifyLogin() called.");
+                        }
+
+                        // ✅ เรียก GoogleAuthen เพื่อส่ง Log
+                        if (googleAuthen != null)
+                        {
+                            Debug.Log("📌 Calling SendLogToServer() from WebSocketManager...");
+                            googleAuthen.StartCoroutine(googleAuthen.SendLogToServer(wsData.userId));
+                        }
+                        else
+                        {
+                            Debug.LogError("❌ googleAuthen is NULL, cannot send log.");
+                        }
                     }
                 }
             }

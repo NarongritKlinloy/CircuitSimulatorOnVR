@@ -24,7 +24,8 @@ public class CircuitLab : MonoBehaviour, ICircuitLab
     public float pegHeight = 0.45f;
     public Vector3 pegScale;
 
-    Board board;
+    public Board board;
+
     const int numRows = 29;
     const int numCols = 9;
 
