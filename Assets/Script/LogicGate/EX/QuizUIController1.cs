@@ -1,15 +1,14 @@
 using UnityEngine;
 using TMPro;
 
-public class QuizUIController3 : MonoBehaviour
+public class QuizUIController1 : MonoBehaviour
 {
-    [Header("อ้างอิงไปยัง QuizManager3")]
-    public QuizManager3 quizManager;  
+    [Header("อ้างอิงไปยัง QuizManager1")]
+    public QuizManager1 quizManager;  
 
     [Header("ตำแหน่ง TMP_Text ที่อยู่ใน Content ของ ScrollView")]
     public TMP_Text tasksScrollText; 
-    // ให้เตรียม TextMeshPro (TMP_Text) ไว้ใน Content ของ ScrollView
-    // แล้วลากมาใส่ช่องนี้
+    // ให้เตรียม TextMeshPro (TMP_Text) ไว้ใน Content ของ ScrollView แล้วลากมาใส่ช่องนี้
 
     [Header("Text แสดงผลลัพธ์ (อยู่นอก ScrollView)")]
     public TMP_Text resultText;
@@ -26,7 +25,7 @@ public class QuizUIController3 : MonoBehaviour
         if (quizManager == null || quizManager.tasks == null || quizManager.tasks.Count == 0)
         {
             if (tasksScrollText != null)
-                tasksScrollText.text = "ไม่มีโจทย์ใน QuizManager2";
+                tasksScrollText.text = "ไม่มีโจทย์ใน QuizManager1";
             return;
         }
 
@@ -49,7 +48,7 @@ public class QuizUIController3 : MonoBehaviour
     {
         if (quizManager == null) return;
 
-        // สั่ง QuizManager2 ตรวจโจทย์ทั้งหมด
+        // สั่ง QuizManager1 ตรวจโจทย์ทั้งหมด
         quizManager.CheckAllTasks();
 
         // แสดงผลลัพธ์คะแนน หรือสรุปผล

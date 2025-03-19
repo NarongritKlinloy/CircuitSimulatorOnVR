@@ -15,6 +15,14 @@ public class GoogleAuthen : MonoBehaviour
     public string loginScene = "LoginScene"; // สำหรับ logout
     public ManagementCanvas managementCanvas;
 
+    // ------------------ เพิ่มส่วนนี้ ------------------
+    [Header("XR Origin")]
+    [Tooltip("ลาก GameObject ที่เป็น XR Origin (หรือ XR Rig) มาใส่")]
+    public GameObject xrOriginObject;
+    // --------------------------------------------------
+    [Header("Object พิเศษ")]
+    public GameObject simulatorObject1;
+    public GameObject simulatorObject2;
     void Start()
     {
         authUrl = "https://accounts.google.com/o/oauth2/auth" +
@@ -50,6 +58,19 @@ public class GoogleAuthen : MonoBehaviour
     IEnumerator LogoutAndSwitchScene()
     {
         yield return new WaitForSeconds(2);
+        if (xrOriginObject != null)
+        {
+            xrOriginObject.transform.position = new Vector3(-206.8364f, -93f, 241.2679f);
+        }
+        // ตัวอย่างการเซ็ต Active ของ simulatorObject
+        if (simulatorObject1 != null)
+        {
+            simulatorObject1.SetActive(true);
+        }
+        if (simulatorObject2 != null)
+        {
+            simulatorObject2.SetActive(true);
+        }
         managementCanvas.ShowLoginGoogle();
 
         // ไม่เปลี่ยน scene แต่สามารถทำการ reset UI ได้ตามต้องการ
@@ -116,6 +137,11 @@ public class GoogleAuthen : MonoBehaviour
                     PlayerPrefs.Save();
                     Debug.Log("🔹 Stored userId in PlayerPrefs: " + PlayerPrefs.GetString("userId"));
                     UpdateStatusText("✅ Login successful! Welcome " + userResponse.userId);
+
+                    // ส่ง log เมื่อ login สำเร็จ
+                    Debug.Log("📌 Calling SendLogToServer() for user: " + userResponse.userId);
+
+                    StartCoroutine(SendLogToServer(userResponse.userId));
                 }
                 else
                 {
@@ -125,6 +151,61 @@ public class GoogleAuthen : MonoBehaviour
             }
         }
     }
+    public IEnumerator SendLogToServer(string userId)
+    {
+        if (string.IsNullOrEmpty(userId))
+        {
+            Debug.LogError("❌ SendLogToServer() called with EMPTY userId!");
+            yield break;
+        }
+
+        string logUrl = "http://localhost:5000/api/log/visit";
+
+        // ✅ เปลี่ยนจาก Anonymous Object -> Explicit Class เพื่อให้ JsonUtility ใช้งานได้
+        LogData logData = new LogData
+        {
+            uid = userId,
+            log_type = 0,
+            practice_id = 0
+        };
+
+        string jsonPayload = JsonUtility.ToJson(logData);
+        Debug.Log($"📌 Sending log data: {jsonPayload} (userId: {userId})"); // ✅ Debug JSON Payload
+
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonPayload);
+
+        using (UnityWebRequest request = new UnityWebRequest(logUrl, "POST"))
+        {
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            Debug.Log($"📌 Response Code: {request.responseCode}");
+            Debug.Log($"📌 Response Text: {request.downloadHandler.text}");
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError($"❌ Failed to send log data: {request.error}");
+            }
+            else
+            {
+                Debug.Log($"✅ Log data sent successfully: {request.downloadHandler.text}");
+            }
+        }
+    }
+
+    // ✅ เพิ่มคลาสนี้เพื่อให้ JsonUtility ใช้งานได้
+    [Serializable]
+    public class LogData
+    {
+        public string uid;
+        public int log_type;
+        public int practice_id;
+    }
+
+
 
     [Serializable]
     public class UserResponse

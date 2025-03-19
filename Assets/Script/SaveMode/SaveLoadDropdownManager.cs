@@ -8,9 +8,10 @@ using System;
 [Serializable]
 public class SimulatorSaveItem
 {
-    public long simulate_id;
-    public string simulate_name;
-    public string simulate_date;
+    public long circuit_id;
+    public string circuit_name;
+    public string circuit_date;
+   
 }
 
 public static class JsonArrayHelper
@@ -47,7 +48,7 @@ public class SaveLoadDropdownManager : MonoBehaviour
     public TMP_Text statusLoad;    // สำหรับแสดงสถานะของการ Load
     public TMP_Text statusDelete;  // สำหรับแสดงสถานะของการ Delete
 
-    // เก็บรายการเซฟทั้งหมด (simulate_id, name, date)
+    // เก็บรายการเซฟทั้งหมด (circuit_id, name, date)
     private List<SimulatorSaveItem> allUserSaves = new List<SimulatorSaveItem>();
     private float refreshInterval = 5f;
 
@@ -109,7 +110,7 @@ public class SaveLoadDropdownManager : MonoBehaviour
         long oldSelectedId = -1;
         if (oldIndex > 0 && oldIndex - 1 < allUserSaves.Count)
         {
-            oldSelectedId = allUserSaves[oldIndex - 1].simulate_id;
+            oldSelectedId = allUserSaves[oldIndex - 1].circuit_id;
         }
 
         saveDropdown.options.Clear();
@@ -117,12 +118,12 @@ public class SaveLoadDropdownManager : MonoBehaviour
         saveDropdown.options.Add(new TMP_Dropdown.OptionData("New Save"));
         foreach (var item in allUserSaves)
         {
-            string displayText = $"{item.simulate_name} ({item.simulate_date})";
+            string displayText = $"{item.circuit_name} ({item.circuit_date})";
             saveDropdown.options.Add(new TMP_Dropdown.OptionData(displayText));
         }
         if (keepSelection && oldSelectedId != -1)
         {
-            int newIndex = allUserSaves.FindIndex(s => s.simulate_id == oldSelectedId);
+            int newIndex = allUserSaves.FindIndex(s => s.circuit_id == oldSelectedId);
             saveDropdown.value = (newIndex >= 0) ? newIndex + 1 : 0;
         }
         else
@@ -155,7 +156,7 @@ public class SaveLoadDropdownManager : MonoBehaviour
             if (dataIndex >= 0 && dataIndex < allUserSaves.Count)
             {
                 selectedSaveForConfirm = allUserSaves[dataIndex];
-                Debug.Log($"User chooses to overwrite: {selectedSaveForConfirm.simulate_name} (ID={selectedSaveForConfirm.simulate_id})");
+                Debug.Log($"User chooses to overwrite: {selectedSaveForConfirm.circuit_name} (ID={selectedSaveForConfirm.circuit_id})");
                 // แสดงหน้าต่างยืนยัน overwrite
                 managementCanvas.ShowUiNotifyConfrimSave();
                 // ผู้ใช้จะต้องกดปุ่มยืนยันใน UI notify confirm ซึ่งเรียก OnConfirmOverwriteSave()
@@ -168,7 +169,7 @@ public class SaveLoadDropdownManager : MonoBehaviour
     {
         if (selectedSaveForConfirm != null)
         {
-            saveLoadManager.UpdateCombined(selectedSaveForConfirm.simulate_id);
+            saveLoadManager.UpdateCombined(selectedSaveForConfirm.circuit_id);
             statusSave.text = "Overwriting save data Success!";
             managementCanvas.ShowUiNotifySaveSuccess();
             selectedSaveForConfirm = null; // เคลียร์ค่า
@@ -193,8 +194,8 @@ public class SaveLoadDropdownManager : MonoBehaviour
         if (dataIndex >= 0 && dataIndex < allUserSaves.Count)
         {
             var chosen = allUserSaves[dataIndex];
-            Debug.Log($"User chooses to load: {chosen.simulate_name} (ID={chosen.simulate_id})");
-            saveLoadManager.LoadCombinedById(chosen.simulate_id);
+            Debug.Log($"User chooses to load: {chosen.circuit_name} (ID={chosen.circuit_id})");
+            saveLoadManager.LoadCombinedById(chosen.circuit_id);
             statusLoad.text = "Loading save data Success!";
             managementCanvas.ShowUiNotifyLoadSuccess();
         }
@@ -217,7 +218,7 @@ public class SaveLoadDropdownManager : MonoBehaviour
         if (dataIndex >= 0 && dataIndex < allUserSaves.Count)
         {
             selectedSaveForConfirm = allUserSaves[dataIndex];
-            Debug.Log($"User chooses to delete: {selectedSaveForConfirm.simulate_name} (ID={selectedSaveForConfirm.simulate_id})");
+            Debug.Log($"User chooses to delete: {selectedSaveForConfirm.circuit_name} (ID={selectedSaveForConfirm.circuit_id})");
             // แสดงหน้าต่างยืนยันการลบ
             managementCanvas.ShowUiNotifyConfrimDelete();
             // ผู้ใช้จะต้องกดปุ่มยืนยันใน UI notify confirm delete ซึ่งเรียก OnConfirmDelete()
@@ -229,7 +230,7 @@ public class SaveLoadDropdownManager : MonoBehaviour
     {
         if (selectedSaveForConfirm != null)
         {
-            StartCoroutine(DeleteSaveFromServer(selectedSaveForConfirm.simulate_id));
+            StartCoroutine(DeleteSaveFromServer(selectedSaveForConfirm.circuit_id));
             statusDelete.text = "Delete save data Success!";
             managementCanvas.ShowUiNotifyDelete();
             selectedSaveForConfirm = null;
