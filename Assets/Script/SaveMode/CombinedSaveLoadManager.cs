@@ -1,4 +1,4 @@
-  using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -12,6 +12,7 @@ using System.Linq;
 [System.Serializable]
 public class DeviceState
 {
+    
     public string prefabName;
     public int pegX;
     public int pegY;
@@ -683,23 +684,29 @@ public class CombinedSaveLoadManager : MonoBehaviour
     #region Clearing Methods
 
     // ลบอุปกรณ์ Circuit ที่มีอยู่
-    private void ClearCircuitDevices()
+    public void ClearCircuitDevices()
     {
+        // if (circuitLab != null)
+        // {
+        //     List<PlacedComponent> currentComponents = circuitLab.GetPlacedComponents();
+        //     foreach (PlacedComponent comp in currentComponents)
+        //     {
+        //         if (comp.GameObject != null)
+        //         {
+        //             Destroy(comp.GameObject);
+        //         }
+        //     }
+        // }
         if (circuitLab != null)
         {
-            List<PlacedComponent> currentComponents = circuitLab.GetPlacedComponents();
-            foreach (PlacedComponent comp in currentComponents)
-            {
-                if (comp.GameObject != null)
-                {
-                    Destroy(comp.GameObject);
-                }
-            }
+            // เรียก Reset() เพื่อเคลียร์อุปกรณ์ทั้งหมดในวงจร 
+            circuitLab.Reset();
         }
+        
     }
 
     // ลบอุปกรณ์ Digital โดยตรวจสอบชื่อ (deviceTypes)
-    private void ClearDigitalDevices()
+    public void ClearDigitalDevices()
     {
         GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
         foreach (GameObject obj in allObjects)
@@ -725,7 +732,7 @@ public class CombinedSaveLoadManager : MonoBehaviour
         yield return StartCoroutine(LoadCircuitSequentially(circuitData));
     }
 
-    private IEnumerator ResetCircuitAndWait()
+    public IEnumerator ResetCircuitAndWait()
     {
         if (circuitLab != null)
         {

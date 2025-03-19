@@ -459,7 +459,7 @@ public class CombinedSaveLoadPractice : MonoBehaviour
 
 
     // ลบอุปกรณ์ Digital โดยตรวจสอบชื่อ (deviceTypes)
-    private void ClearDigitalDevices()
+    public void ClearDigitalDevices()
     {
         GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
         foreach (GameObject obj in allObjects)

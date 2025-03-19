@@ -4,6 +4,7 @@ using TMPro;
 
 public class ManagementCanvas : MonoBehaviour
 {
+
     [Header("เมนูหลักแต่ละหน้า")]
     public GameObject LoginGoogle;
     public GameObject mainMenu;
@@ -35,12 +36,14 @@ public class ManagementCanvas : MonoBehaviour
     [Tooltip("ลาก GameObject ที่เป็น XR Origin (หรือ XR Rig) มาใส่")]
     public GameObject xrOriginObject;
     // --------------------------------------------------
+    private string userId;
 
 
     private GameObject currentMenu = null; // เก็บหน้าเมนูที่เปิดอยู่ปัจจุบัน
 
     void Start()
     {
+
         // เริ่มต้นเปิดหน้า LoginGoogle
         ShowLoginGoogle();
         //ShowMainMenu();
@@ -169,10 +172,10 @@ public class ManagementCanvas : MonoBehaviour
     {
         ShowMenu(UiNotifyLogin);
         // ดึงค่า userId จาก PlayerPrefs แล้วแสดงบน Text
-        string uid = PlayerPrefs.GetString("userId", "Unknown UID");
+        //string uid = PlayerPrefs.GetString("userId", "Unknown UID");
         if (uidText != null)
         {
-            uidText.text = "Welcome :" + uid;
+            uidText.text = "Welcome :" + userId;
         }
     }
 
@@ -233,10 +236,20 @@ public class ManagementCanvas : MonoBehaviour
     // -------------------------------------------------------------------
     //  อื่น ๆ
     // -------------------------------------------------------------------
+    public void UpdateUserId(string newUserId)
+    {
+        userId = newUserId;
+        // เก็บลง PlayerPrefs เผื่อใช้ข้ามซีน หรือเปิด-ปิดโปรแกรม
+        PlayerPrefs.SetString("userId", userId);
+        PlayerPrefs.Save();
 
+        Debug.Log("✅ Updated userId in ManagementCanvas: " + userId);
+    }
     public void ExitApplication()
     {
         Debug.Log("Exit button pressed!");
         Application.Quit();
     }
+
+
 }

@@ -3,6 +3,7 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 using UnityEngine.Networking;
+using System.Text.RegularExpressions;
 
 public class GoogleAuthen : MonoBehaviour
 {
@@ -12,11 +13,10 @@ public class GoogleAuthen : MonoBehaviour
     private string authUrl;
     private string serverUrl = "https://smith11.ce.kmitl.ac.th/register";
 
-    public string loginScene = "LoginScene"; // ✅ ไม่ต้องเปลี่ยน Scene
     public ManagementCanvas managementCanvas;
+    public CombinedSaveLoadManager combinedSaveLoadManager;
 
     [Header("XR Origin")]
-    [Tooltip("ลาก GameObject ที่เป็น XR Origin (หรือ XR Rig) มาใส่")]
     public GameObject xrOriginObject;
 
     [Header("Object พิเศษ")]
@@ -33,24 +33,35 @@ public class GoogleAuthen : MonoBehaviour
                   "&prompt=select_account";
 
         Application.deepLinkActivated += OnDeepLink;
+
+        // ✅ ตรวจสอบว่ามี userId เก็บไว้ใน PlayerPrefs หรือไม่
+        if (PlayerPrefs.HasKey("userId"))
+        {
+            Debug.Log("✅ Found userId in PlayerPrefs: " + PlayerPrefs.GetString("userId"));
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ No userId found in PlayerPrefs");
+        }
     }
 
     public void OnSignIn()
     {
-        StartCoroutine(Wiat());
         Debug.Log("🔹 Opening Google Login: " + authUrl);
         Application.OpenURL(authUrl);
-    }
 
-    IEnumerator Wiat()
-    {
-        yield return new WaitForSeconds(2);
+        // เรียกเชื่อมต่อ WebSocket อีกครั้ง
+        WebSocketManager webSocketManager = FindObjectOfType<WebSocketManager>();
+        if (webSocketManager != null)
+        {
+            webSocketManager.ConnectWebSocket();
+        }
     }
 
     public void OnLogout()
     {
         Debug.Log("🔹 Logging out...");
-        PlayerPrefs.DeleteKey("userId"); // ✅ ลบ userId ออกจาก PlayerPrefs
+        PlayerPrefs.DeleteKey("userId");
         PlayerPrefs.Save();
         StartCoroutine(LogoutAndSwitchScene());
     }
@@ -65,61 +76,59 @@ public class GoogleAuthen : MonoBehaviour
 
         if (simulatorObject1 != null) simulatorObject1.SetActive(true);
         if (simulatorObject2 != null) simulatorObject2.SetActive(true);
-
+        combinedSaveLoadManager.ClearDigitalDevices();
+        combinedSaveLoadManager.ClearCircuitDevices();
         managementCanvas.ShowLoginGoogle();
     }
 
     void OnDeepLink(string url)
     {
-        Debug.Log("🔹 Received Deep Link: " + url);
+        Debug.Log("🔹 Received Deep Link: " + url); // ✅ Log URL ที่ได้รับจาก Google
+
         string token = ExtractTokenFromURL(url);
 
         if (!string.IsNullOrEmpty(token))
-        {   
-            ReturnToUnityApp(); // 🔄 กลับเข้าเกมด้วย Android Intent
+        {
             Debug.Log("✅ Extracted Token: " + token);
-
+            PlayerPrefs.SetString("accessToken", token);
+            PlayerPrefs.Save();
             StartCoroutine(SendUserDataToServer(token));
         }
         else
         {
             Debug.LogError("❌ Failed to extract token from URL");
-            UpdateStatusText("❌ Token extraction failed.");
         }
     }
 
-    // ✅ ฟังก์ชันนี้ช่วยปิด Browser และสลับกลับเกม
-    void ReturnToUnityApp()
+    string ExtractTokenFromURL(string url)
     {
-#if UNITY_ANDROID
         try
         {
-            AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-            AndroidJavaObject currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-            AndroidJavaObject packageManager = currentActivity.Call<AndroidJavaObject>("getPackageManager");
-            string packageName = currentActivity.Call<string>("getPackageName");
-            AndroidJavaObject launchIntent = packageManager.Call<AndroidJavaObject>("getLaunchIntentForPackage", packageName);
+            Debug.Log("🔍 Checking URL: " + url); // ✅ Log URL ก่อนแยกค่า
 
-            if (launchIntent != null)
+            // ✅ ใช้ Regex ค้นหา access_token ทั้งจาก Query String และ Fragment
+            Match match = Regex.Match(url, @"access_token=([^&]+)");
+            if (match.Success)
             {
-                currentActivity.Call("startActivity", launchIntent);
-                Debug.Log("🔄 Returning to Unity App...");
+                string extractedToken = match.Groups[1].Value;
+                Debug.Log("✅ Extracted access_token: " + extractedToken);
+                return extractedToken;
             }
-            else
-            {
-                Debug.LogError("❌ Could not create launch intent for package: " + packageName);
-            }
+
+            Debug.LogWarning("⚠️ No access_token found in URL.");
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Debug.LogError("❌ Error returning to Unity App: " + e.Message);
+            Debug.LogError("❌ Error extracting token: " + ex.Message);
         }
-#endif
+
+        return null;
     }
+
 
     IEnumerator SendUserDataToServer(string accessToken)
     {
-        string jsonPayload = JsonUtility.ToJson(new { accessToken = accessToken });
+        string jsonPayload = JsonUtility.ToJson(new { accessToken });
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonPayload);
 
         using (UnityWebRequest request = new UnityWebRequest(serverUrl, "POST"))
@@ -139,9 +148,9 @@ public class GoogleAuthen : MonoBehaviour
             {
                 Debug.Log("✅ Server response: " + request.downloadHandler.text);
                 UserResponse userResponse = JsonUtility.FromJson<UserResponse>(request.downloadHandler.text);
+
                 if (userResponse != null && !string.IsNullOrEmpty(userResponse.userId))
                 {
-                    // ✅ เปลี่ยนเป็นใช้ PlayerPrefs แทน
                     PlayerPrefs.SetString("userId", userResponse.userId);
                     PlayerPrefs.Save();
 
@@ -168,13 +177,7 @@ public class GoogleAuthen : MonoBehaviour
 
         string logUrl = "https://smith11.ce.kmitl.ac.th/api/log/visitunity";
 
-        LogData logData = new LogData
-        {
-            uid = userId,
-            log_type = 0,
-            practice_id = 0
-        };
-
+        LogData logData = new LogData { uid = userId, log_type = 0, practice_id = 0 };
         string jsonPayload = JsonUtility.ToJson(logData);
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonPayload);
 
@@ -186,15 +189,14 @@ public class GoogleAuthen : MonoBehaviour
 
             yield return request.SendWebRequest();
 
-            Debug.Log($"📌 Response Code: {request.responseCode}");
-            Debug.Log($"📌 Response Text: {request.downloadHandler.text}");
-
             if (request.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError($"❌ Failed to send log data: {request.error}");
             }
             else
             {
+                //Debug.Log($"✅ testttt : {userId}");
+
                 Debug.Log($"✅ Log data sent successfully: {request.downloadHandler.text}");
             }
         }
@@ -215,44 +217,14 @@ public class GoogleAuthen : MonoBehaviour
         public string userId;
     }
 
-    string ExtractTokenFromURL(string url)
-    {
-        try
-        {
-            Uri uri = new Uri(url);
-            if (!string.IsNullOrEmpty(uri.Fragment))
-            {
-                string fragment = uri.Fragment.StartsWith("#") ? uri.Fragment.Substring(1) : uri.Fragment;
-                var queryParams = fragment.Split('&');
-                foreach (string param in queryParams)
-                {
-                    string[] keyValue = param.Split('=');
-                    if (keyValue.Length == 2 && keyValue[0] == "access_token")
-                    {
-                        return keyValue[1];
-                    }
-                }
-            }
-            return null;
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError("Error parsing URL: " + ex.Message);
-            return null;
-        }
-    }
-
     void UpdateStatusText(string message)
     {
-        if (statusText != null)
-        {
-            statusText.text = message;
-        }
+        if (statusText != null) statusText.text = message;
     }
 
-    public void OpenGoogle()
+    public void OpenFeedbackUser()
     {
-        Debug.Log("🔹 Opening Google in external browser");
-        Application.OpenURL("https://www.google.com");
+        Debug.Log("🔹 Opening FeedBackUser in external browser");
+        Application.OpenURL("https://cozy-druid-ddd4b6.netlify.app/feedbackuser");
     }
 }
