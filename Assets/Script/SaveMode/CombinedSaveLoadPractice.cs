@@ -9,9 +9,9 @@ using System.Linq;
 public class CombinedSaveLoadPractice : MonoBehaviour
 {
     // API endpoints
-    public string apiSaveUrl = "http://localhost:5000/api/practice/save";
-    public string apiLoadUrl = "http://localhost:5000/api/practice/load";
-    public string apiLoadByIdUrl = "http://localhost:5000/api/practice/loadById";
+    public string apiSaveUrl = "https://smith11.ce.kmitl.ac.th/api/practice/save";
+    public string apiLoadUrl = "https://smith11.ce.kmitl.ac.th/api/practice/load";
+    public string apiLoadByIdUrl = "https://smith11.ce.kmitl.ac.th/api/practice/loadById";
 
     // Save type สำหรับ combined (เช่น ใช้ค่า 2 เพื่อระบุว่าข้อมูลเป็นแบบผสม)
     public int saveTypeCombined = 2;
@@ -208,7 +208,7 @@ public class CombinedSaveLoadPractice : MonoBehaviour
         isSaving = false;
     }
 
-    public string apiUpdateUrl = "http://localhost:5000/api/simulator/update";
+    public string apiUpdateUrl = "https://smith11.ce.kmitl.ac.th/api/simulator/update";
 
     public void UpdateCombined(long saveId)
     {
@@ -459,7 +459,7 @@ public class CombinedSaveLoadPractice : MonoBehaviour
 
 
     // ลบอุปกรณ์ Digital โดยตรวจสอบชื่อ (deviceTypes)
-    private void ClearDigitalDevices()
+    public void ClearDigitalDevices()
     {
         GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
         foreach (GameObject obj in allObjects)

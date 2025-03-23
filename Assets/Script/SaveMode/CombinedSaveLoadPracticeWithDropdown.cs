@@ -15,10 +15,10 @@ using System.Linq;
 public class CombinedSaveLoadPracticeWithDropdown : MonoBehaviour
 {
     #region API & Save Settings
-    public string apiSaveUrl = "http://localhost:5000/api/practice/save";
-    public string apiLoadUrl = "http://localhost:5000/api/practice/load";
-    public string apiLoadByIdUrl = "http://localhost:5000/api/practice/loadById";
-    public string apiUpdateUrl = "http://localhost:5000/api/practice/Update";
+    public string apiSaveUrl = "https://smith11.ce.kmitl.ac.th/api/practice/save";
+    public string apiLoadUrl = "https://smith11.ce.kmitl.ac.th/api/practice/load";
+    public string apiLoadByIdUrl = "https://smith11.ce.kmitl.ac.th/api/practice/loadById";
+    public string apiUpdateUrl = "https://smith11.ce.kmitl.ac.th/api/practice/Update";
     // Save type สำหรับ combined (ตัวอย่าง)
     public int saveTypeCombined = 2;
     public float loadCooldown = 0.1f;
@@ -149,7 +149,7 @@ public class CombinedSaveLoadPracticeWithDropdown : MonoBehaviour
             yield break;
         }
 
-        string url = "http://localhost:5000/api/simulator/listSavesDigital?userId=" + userId;
+        string url = "https://smith11.ce.kmitl.ac.th/api/simulator/listSavesDigital?userId=" + userId;
         using (UnityWebRequest req = UnityWebRequest.Get(url))
         {
             yield return req.SendWebRequest();
@@ -301,7 +301,7 @@ public class CombinedSaveLoadPracticeWithDropdown : MonoBehaviour
             Debug.LogWarning("No userId => cannot delete save from server.");
             yield break;
         }
-        string url = $"http://localhost:5000/api/simulator/deleteById?userId={userId}&saveId={saveId}";
+        string url = $"https://smith11.ce.kmitl.ac.th/api/simulator/deleteById?userId={userId}&saveId={saveId}";
         using (UnityWebRequest req = UnityWebRequest.Delete(url))
         {
             yield return req.SendWebRequest();

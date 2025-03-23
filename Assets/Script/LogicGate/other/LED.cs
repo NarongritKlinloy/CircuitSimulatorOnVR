@@ -49,9 +49,9 @@ public class LED : MonoBehaviour
             {
                 targetLight = targetObject.AddComponent<Light>();
                 targetLight.type = LightType.Point;
-                targetLight.range = 2.5f;
+                targetLight.range = 1.0f;
                 targetLight.intensity = 0f;
-                targetLight.color = Color.red;
+                targetLight.color = Color.green;
             }
         }
 
@@ -74,21 +74,22 @@ public class LED : MonoBehaviour
             // เปลี่ยนสีของ LED
             if (ledRenderer != null)
             {
-                ledRenderer.material.color = isActive ? Color.red : Color.gray;
+                ledRenderer.material.color = isActive ? Color.green : Color.gray;
             }
 
-            // เปลี่ยนสีของ targetObject และปรับ Emission
+            // เปลี่ยนสีของ targetObject และ Emission
             if (targetRenderer != null && targetMaterial != null)
             {
-                targetRenderer.material.color = isActive ? Color.red : Color.gray;
+                targetMaterial.color = isActive ? Color.green : Color.gray;
                 if (isActive)
                 {
                     targetMaterial.EnableKeyword("_EMISSION");
-                    targetMaterial.SetColor("_EmissionColor", Color.red * 2f);
+                    targetMaterial.SetColor("_EmissionColor", Color.green * 2f);
                 }
                 else
                 {
                     targetMaterial.DisableKeyword("_EMISSION");
+                    targetMaterial.SetColor("_EmissionColor", Color.gray);
                 }
             }
 
@@ -99,4 +100,5 @@ public class LED : MonoBehaviour
             }
         }
     }
+
 }

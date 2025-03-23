@@ -47,7 +47,10 @@ const db = mysql.createPool({
 })();
 
 // 4) สร้าง WebSocket Server แยกพอร์ตเป็น 8080
-const wss = new WebSocketServer({ port: 8080 });
+const wss = new WebSocketServer({ server });
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on http://0.0.0.0:${PORT}`);
+});
 wss.on("connection", (ws) => {
   console.log("Unity Connected via WebSocket");
   ws.send("Connected to WebSocket Server");
@@ -75,7 +78,7 @@ app.get("/callback", (req, res) => {
       const token = params.get("access_token");
 
       if (token) {
-          fetch("http://localhost:5000/register", {
+          fetch("https://smith11.ce.kmitl.ac.th/register", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ accessToken: token })
@@ -95,10 +98,10 @@ app.get("/callback", (req, res) => {
           })
           .catch(error => {
               console.error("Error:", error);
-              window.location.href = "http://localhost:5000/error";
+              window.location.href = "https://smith11.ce.kmitl.ac.th/error";
           });
       } else {
-          window.location.href = "http://localhost:5000/error";
+          window.location.href = "https://smith11.ce.kmitl.ac.th/error";
       }
     </script>
   `);
@@ -413,11 +416,9 @@ app.put("/api/simulator/update", async (req, res) => {
     `;
     const [result] = await db.query(sql, [saveJson, saveId, userId]);
     if (result.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({
-          error: "No save data found or it doesn't belong to this user",
-        });
+      return res.status(404).json({
+        error: "No save data found or it doesn't belong to this user",
+      });
     }
     return res.json({
       message: "Update successful",
@@ -582,7 +583,7 @@ app.get("/api/practices/count", async (req, res) => {
 });
 
 // -------------------------- ส่วน Log -------------------------- //
-app.post("/api/log/visit", async (req, res) => {
+app.post("/api/log/visitunity", async (req, res) => {
   try {
     const { uid, log_type, practice_id } = req.body;
 
@@ -597,6 +598,23 @@ app.post("/api/log/visit", async (req, res) => {
   } catch (err) {
     console.error("❌ Error adding log:", err);
     return res.status(500).json({ error: "Add log failed" });
+  }
+});
+
+// เพิ่ม log
+app.post("/api/log/visit", async (req, res) => {
+  const { uid, log_type, practice_id } = req.body;
+  const sql =
+    "INSERT INTO log (uid, log_time, log_type, practice_id) VALUES (?, ?, ?, ?)";
+  try {
+    const now = new Date();
+    now.setHours(now.getHours() + 7); // เพิ่ม 7 ชั่วโมงให้ตรงกับเวลาประเทศไทย
+    const date = now.toISOString().slice(0, 19).replace("T", " ");
+    await db.query(sql, [uid, date, log_type, practice_id]);
+    return res.status(200).json({ message: "Added log successfully" });
+  } catch (err) {
+    console.error("Error adding log:", err);
+    res.status(500).json({ error: "Add log failed" });
   }
 });
 
@@ -719,11 +737,9 @@ app.delete("/api/practice/:practice_id", async (req, res) => {
   try {
     const [result] = await db.query(sql, [practice_id]);
     if (result.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({
-          error: "Practice not found or is assigned in ClassroomPractice",
-        });
+      return res.status(404).json({
+        error: "Practice not found or is assigned in ClassroomPractice",
+      });
     }
     res.status(200).json({ message: "Practice deleted successfully" });
   } catch (err) {

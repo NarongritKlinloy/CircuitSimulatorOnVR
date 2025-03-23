@@ -12,6 +12,7 @@ using System.Linq;
 [System.Serializable]
 public class DeviceState
 {
+    
     public string prefabName;
     public int pegX;
     public int pegY;
@@ -107,9 +108,9 @@ public class ServerLoadResponse
 public class CombinedSaveLoadManager : MonoBehaviour
 {
     // API endpoints
-    public string apiSaveUrl = "http://localhost:5000/api/simulator/save";
-    public string apiLoadUrl = "http://localhost:5000/api/simulator/load";
-    public string apiLoadByIdUrl = "http://localhost:5000/api/simulator/loadById";
+    public string apiSaveUrl = "https://smith11.ce.kmitl.ac.th/api/simulator/save";
+    public string apiLoadUrl = "https://smith11.ce.kmitl.ac.th/api/simulator/load";
+    public string apiLoadByIdUrl = "https://smith11.ce.kmitl.ac.th/api/simulator/loadById";
 
     // Save type สำหรับ combined (เช่น ใช้ค่า 2 เพื่อระบุว่าข้อมูลเป็นแบบผสม)
     public int saveTypeCombined = 2;
@@ -368,7 +369,7 @@ public class CombinedSaveLoadManager : MonoBehaviour
         isSaving = false;
     }
 
-    public string apiUpdateUrl = "http://localhost:5000/api/simulator/update";
+    public string apiUpdateUrl = "https://smith11.ce.kmitl.ac.th/api/simulator/update";
 
     public void UpdateCombined(long saveId)
     {
@@ -683,23 +684,29 @@ public class CombinedSaveLoadManager : MonoBehaviour
     #region Clearing Methods
 
     // ลบอุปกรณ์ Circuit ที่มีอยู่
-    private void ClearCircuitDevices()
+    public void ClearCircuitDevices()
     {
+        // if (circuitLab != null)
+        // {
+        //     List<PlacedComponent> currentComponents = circuitLab.GetPlacedComponents();
+        //     foreach (PlacedComponent comp in currentComponents)
+        //     {
+        //         if (comp.GameObject != null)
+        //         {
+        //             Destroy(comp.GameObject);
+        //         }
+        //     }
+        // }
         if (circuitLab != null)
         {
-            List<PlacedComponent> currentComponents = circuitLab.GetPlacedComponents();
-            foreach (PlacedComponent comp in currentComponents)
-            {
-                if (comp.GameObject != null)
-                {
-                    Destroy(comp.GameObject);
-                }
-            }
+            // เรียก Reset() เพื่อเคลียร์อุปกรณ์ทั้งหมดในวงจร 
+            circuitLab.Reset();
         }
+        
     }
 
     // ลบอุปกรณ์ Digital โดยตรวจสอบชื่อ (deviceTypes)
-    private void ClearDigitalDevices()
+    public void ClearDigitalDevices()
     {
         GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
         foreach (GameObject obj in allObjects)
@@ -725,7 +732,7 @@ public class CombinedSaveLoadManager : MonoBehaviour
         yield return StartCoroutine(LoadCircuitSequentially(circuitData));
     }
 
-    private IEnumerator ResetCircuitAndWait()
+    public IEnumerator ResetCircuitAndWait()
     {
         if (circuitLab != null)
         {
