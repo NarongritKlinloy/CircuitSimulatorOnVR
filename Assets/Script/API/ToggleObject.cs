@@ -5,6 +5,8 @@ using TMPro;
 
 public class ToggleObjects : MonoBehaviour
 {
+    private string userId;
+
     [Header("URL ของ API (ไม่ต้องต่อท้าย UID)")]
     public string apiUrl = "https://smith11.ce.kmitl.ac.th/api/practice/find/";
 
@@ -35,18 +37,51 @@ public class ToggleObjects : MonoBehaviour
     }
 
     void Start()
-    {
-        // ดึง userId จาก PlayerPrefs (GoogleAuthen หรือ WebSocketManager ควรเซ็ตไว้)
-        string storedUserId = PlayerPrefs.GetString("userId", "unknown");
+    {   
+        // userId = "65015041@kmitl.ac.th";
+        // StartCoroutine(CheckAllPracticesLoop(userId));
+    }
 
-        if (string.IsNullOrEmpty(storedUserId) || storedUserId == "unknown")
+    public void UpdateUserId(string newUserId)
+    {
+        userId = newUserId;
+        // เก็บลง PlayerPrefs เผื่อใช้ข้ามซีน หรือเปิด-ปิดโปรแกรม
+        PlayerPrefs.SetString("userId", userId);
+        PlayerPrefs.Save();
+        // เริ่ม Coroutine ตรวจสอบ practice ทุก pollingInterval วินาที
+        StartCoroutine(CheckAllPracticesLoop(userId));
+        Debug.Log("✅ Updated userId in ToggleObject: " + userId);
+    }
+
+    public void ClearUserId()
+    {
+        // หยุดการทำงานของ Coroutine ที่กำลังเช็คสถานะ
+        StopAllCoroutines();
+
+        // ลบคีย์ userId ใน PlayerPrefs
+        PlayerPrefs.DeleteKey("userId");
+        PlayerPrefs.Save();
+
+        // เคลียร์ตัวแปรภายใน
+        userId = null;
+
+        // ปิดวัตถุทุกตัวเป็น default
+        if (toggleItems != null)
         {
-            Debug.LogWarning("No valid userId in PlayerPrefs. ToggleObjects won't fetch data.");
-            return;
+            foreach (var item in toggleItems)
+            {
+                if (item.targetObject != null)
+                    item.targetObject.SetActive(false);
+
+                if (item.nameText != null)
+                    item.nameText.text = "";
+
+                if (item.detailText != null)
+                    item.detailText.text = "";
+            }
         }
 
-        // เริ่ม Coroutine ตรวจสอบ practice ทุก pollingInterval วินาที
-        StartCoroutine(CheckAllPracticesLoop(storedUserId));
+        Debug.Log("🔸 ToggleObjects: Cleared userId and stopped checking practice.");
     }
 
     IEnumerator CheckAllPracticesLoop(string userId)

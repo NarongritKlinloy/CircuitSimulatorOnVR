@@ -106,11 +106,12 @@ public class WebSocketManager : MonoBehaviour
                         try
                         {
                             ManagementCanvas managementCanvas = FindObjectOfType<ManagementCanvas>();
+                            ToggleObjects toggleObjects = FindObjectOfType<ToggleObjects>();
                             if (managementCanvas != null)
                             {
                                 // อัปเดต userId ลงในตัว ManagementCanvas
                                 managementCanvas.UpdateUserId(wsData.userId);
-
+                                toggleObjects.UpdateUserId(wsData.userId);
                                 // แสดง Pop-Up แจ้งว่าล็อกอินสำเร็จ
                                 managementCanvas.ShowUiNotifyLogin();
                                 Debug.Log("🔹 ShowUiNotifyLogin() called.");

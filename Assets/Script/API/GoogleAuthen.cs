@@ -63,6 +63,20 @@ public class GoogleAuthen : MonoBehaviour
         Debug.Log("🔹 Logging out...");
         PlayerPrefs.DeleteKey("userId");
         PlayerPrefs.Save();
+
+        // (2) ให้ ToggleObjects เคลียร์ userId ภายในตัวของมันด้วย
+        ToggleObjects toggleObj = FindObjectOfType<ToggleObjects>();
+        if (toggleObj != null)
+        {
+            toggleObj.ClearUserId();
+        }
+
+        ManagementCanvas managementCanvas = FindObjectOfType<ManagementCanvas>();
+        if(managementCanvas != null)
+        {
+            managementCanvas.ClearUserId();
+        }
+
         StartCoroutine(LogoutAndSwitchScene());
     }
 

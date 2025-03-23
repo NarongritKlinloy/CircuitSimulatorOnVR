@@ -38,6 +38,7 @@ public class ManagementCanvas : MonoBehaviour
     // --------------------------------------------------
     private string userId;
 
+    public ToggleObjects toggleObjects; // <-- ลากตัว ToggleObjects มาจาก Inspector
 
     private GameObject currentMenu = null; // เก็บหน้าเมนูที่เปิดอยู่ปัจจุบัน
 
@@ -245,6 +246,20 @@ public class ManagementCanvas : MonoBehaviour
 
         Debug.Log("✅ Updated userId in ManagementCanvas: " + userId);
     }
+
+    public void ClearUserId()
+    {
+        // หยุดการทำงานของ Coroutine ที่กำลังเช็คสถานะ
+        StopAllCoroutines();
+
+        // ลบคีย์ userId ใน PlayerPrefs
+        PlayerPrefs.DeleteKey("userId");
+        PlayerPrefs.Save();
+
+        // เคลียร์ตัวแปรภายใน
+        userId = null;
+    }
+    
     public void ExitApplication()
     {
         Debug.Log("Exit button pressed!");

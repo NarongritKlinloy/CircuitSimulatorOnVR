@@ -96,7 +96,7 @@ public class OutputConnector : MonoBehaviour
     {
         if (renderer != null)
         {
-            renderer.material.color = isOn ? Color.green : Color.red;
+            renderer.material.color = isOn ? Color.green : Color.gray;
         }
     }
 }

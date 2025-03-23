@@ -3475,7 +3475,19 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: "\u0E43\u0E2B\u0E49\u0E19\u0E31\u0E01\u0E28\u0E36\u0E01\u0E29\u0E32\u0E2D\u0E2D\u0E01\u0E41\u0E1A\u0E1A\u0E41\u0E25\u0E30\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E27\u0E07\u0E08\u0E23
+    Digital Combinational Logic \u0E17\u0E35\u0E48\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E04\u0E27\u0E1A\u0E04\u0E38\u0E21\u0E01\u0E32\u0E23\u0E40\u0E1B\u0E34\u0E14-\u0E1B\u0E34\u0E14\u0E02\u0E2D\u0E07
+    LED \u0E44\u0E14\u0E49 \u0E15\u0E32\u0E21\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E25\u0E02\u0E17\u0E35\u0E48\u0E01\u0E33\u0E2B\u0E19\u0E14\u0E43\u0E19\u0E15\u0E32\u0E23\u0E32\u0E07\u0E04\u0E27\u0E32\u0E21\u0E08\u0E23\u0E34\u0E07
+    (truth table) \u0E42\u0E14\u0E22\u0E43\u0E0A\u0E49 Toggle Switch \u0E02\u0E19\u0E32\u0E14
+    4 Bit  (1 \u0E15\u0E31\u0E27  = 1 Bit) \u0E41\u0E17\u0E19\u0E04\u0E48\u0E32\u0E15\u0E31\u0E27\u0E40\u0E25\u0E02\u0E43\u0E19\u0E23\u0E30\u0E1A\u0E1A\u0E40\u0E25\u0E02\u0E10\u0E32\u0E19\u0E2A\u0E2D\u0E07
+    \u0E15\u0E32\u0E21\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E17\u0E35\u0E48\u0E01\u0E33\u0E2B\u0E19\u0E14\n\n\u0E43\u0E2B\u0E49\u0E19\u0E31\u0E01\u0E28\u0E36\u0E01\u0E29\u0E32\u0E15\u0E48\u0E2D\u0E27\u0E07\u0E08\u0E23\u0E42\u0E14\u0E22\u0E17\u0E35\u0E48
+    LED \u0E08\u0E30\u0E15\u0E49\u0E2D\u0E07\u0E15\u0E34\u0E14\u0E17\u0E35\u0E48\u0E40\u0E25\u0E02
+    1 \u0E40\u0E1E\u0E35\u0E22\u0E07\u0E15\u0E31\u0E27\u0E40\u0E25\u0E02\u0E40\u0E14\u0E35\u0E22\u0E27\u0E40\u0E17\u0E48\u0E32\u0E19\u0E31\u0E49\u0E19\n\n\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E02\u0E2D\u0E07\u0E01\u0E32\u0E23\u0E2D\u0E2D\u0E01\u0E41\u0E1A\u0E1A\u0E27\u0E07\u0E08\u0E23\n\n    
+    - \u0E15\u0E49\u0E2D\u0E07\u0E21\u0E35 LED \u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22
+    1 \u0E15\u0E31\u0E27\n     - \u0E15\u0E49\u0E2D\u0E07\u0E21\u0E35 Toggle Switch
+    \u0E08\u0E33\u0E19\u0E27\u0E19 4 \u0E15\u0E31\u0E27\n     - \u0E27\u0E07\u0E08\u0E23\u0E15\u0E49\u0E2D\u0E07\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E25\u0E30\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E17\u0E33\u0E07\u0E32\u0E19\u0E44\u0E14\u0E49\u0E08\u0E23\u0E34\u0E07\n    
+    - \u0E15\u0E49\u0E2D\u0E07\u0E21\u0E35 Logic Gate \u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22
+    1 \u0E15\u0E31\u0E27\u0E43\u0E19\u0E27\u0E07\u0E08\u0E23\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 513d54bbf8d95e948bf800b1a70b702c, type: 2}
   m_sharedMaterial: {fileID: -7695865702447755162, guid: 513d54bbf8d95e948bf800b1a70b702c, type: 2}
@@ -4899,7 +4911,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: Practice 2
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 513d54bbf8d95e948bf800b1a70b702c, type: 2}
   m_sharedMaterial: {fileID: -7695865702447755162, guid: 513d54bbf8d95e948bf800b1a70b702c, type: 2}
@@ -6630,7 +6642,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: Practice 1
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 513d54bbf8d95e948bf800b1a70b702c, type: 2}
   m_sharedMaterial: {fileID: -7695865702447755162, guid: 513d54bbf8d95e948bf800b1a70b702c, type: 2}
@@ -8106,7 +8118,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: Welcome :65015041@kmitl.ac.th
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
   m_sharedMaterial: {fileID: 2140032, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
@@ -11040,6 +11052,26 @@ PrefabInstance:
     - target: {fileID: 6332276808103680507, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 7172776547260012526, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
+      propertyPath: m_Size.y
+      value: 0.0003437699
+      objectReference: {fileID: 0}
+    - target: {fileID: 7172776547260012526, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
+      propertyPath: m_Size.z
+      value: 0.0022154152
+      objectReference: {fileID: 0}
+    - target: {fileID: 7172776547260012526, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
+      propertyPath: m_Center.x
+      value: -0.00000005115325
+      objectReference: {fileID: 0}
+    - target: {fileID: 7172776547260012526, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
+      propertyPath: m_Center.y
+      value: 0.00014745365
+      objectReference: {fileID: 0}
+    - target: {fileID: 7172776547260012526, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
+      propertyPath: m_Center.z
+      value: 0.0011216906
       objectReference: {fileID: 0}
     - target: {fileID: 7777330782954339099, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -22387,7 +22419,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &597103501
 RectTransform:
   m_ObjectHideFlags: 0
@@ -23654,7 +23686,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: "\u0E43\u0E2B\u0E49\u0E19\u0E31\u0E01\u0E28\u0E36\u0E01\u0E29\u0E32\u0E2D\u0E2D\u0E01\u0E41\u0E1A\u0E1A\u0E41\u0E25\u0E30\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E27\u0E07\u0E08\u0E23
+    Toggle LED \u0E17\u0E35\u0E48\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E04\u0E27\u0E1A\u0E04\u0E38\u0E21\u0E01\u0E32\u0E23\u0E40\u0E1B\u0E34\u0E14-\u0E1B\u0E34\u0E14\u0E02\u0E2D\u0E07
+    LED \u0E44\u0E14\u0E49"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 513d54bbf8d95e948bf800b1a70b702c, type: 2}
   m_sharedMaterial: {fileID: -7695865702447755162, guid: 513d54bbf8d95e948bf800b1a70b702c, type: 2}
@@ -25318,7 +25352,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8454748531681350992, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9142516060564844685, guid: 5a2818b3357994345b8c0e3966059a2c, type: 3}
       propertyPath: m_Pivot.x
@@ -30881,6 +30915,7 @@ MonoBehaviour:
   simulatorObject1: {fileID: 42640545}
   simulatorObject2: {fileID: 1128634443}
   xrOriginObject: {fileID: 266595186}
+  toggleObjects: {fileID: 0}
 --- !u!222 &892195993
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -40330,7 +40365,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1228364585
 Transform:
   m_ObjectHideFlags: 0
@@ -56847,7 +56882,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -0.283}
+  m_AnchoredPosition: {x: 0, y: -0.136}
   m_SizeDelta: {x: 350, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1916018020
@@ -57446,7 +57481,12 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: "\u0E43\u0E2B\u0E49\u0E19\u0E31\u0E01\u0E28\u0E36\u0E01\u0E29\u0E32\u0E2D\u0E2D\u0E01\u0E41\u0E1A\u0E1A\u0E41\u0E25\u0E30\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E27\u0E07\u0E08\u0E23
+    Digital Combinational Logic \u0E17\u0E35\u0E48\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E04\u0E27\u0E1A\u0E04\u0E38\u0E21\u0E01\u0E32\u0E23\u0E40\u0E1B\u0E34\u0E14-\u0E1B\u0E34\u0E14\u0E02\u0E2D\u0E07
+    LED \u0E44\u0E14\u0E49 \u0E15\u0E32\u0E21\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E25\u0E02\u0E17\u0E35\u0E48\u0E01\u0E33\u0E2B\u0E19\u0E14\u0E43\u0E19\u0E15\u0E32\u0E23\u0E32\u0E07\u0E04\u0E27\u0E32\u0E21\u0E08\u0E23\u0E34\u0E07
+    (truth table) \u0E42\u0E14\u0E22\u0E43\u0E0A\u0E49 Toggle Switch \u0E02\u0E19\u0E32\u0E14
+    6 Bit (1 \u0E15\u0E31\u0E27 = 1 Bit) \u0E41\u0E17\u0E19\u0E04\u0E48\u0E32\u0E15\u0E31\u0E27\u0E40\u0E25\u0E02\u0E43\u0E19\u0E23\u0E30\u0E1A\u0E1A\u0E40\u0E25\u0E02\u0E10\u0E32\u0E19\u0E2A\u0E2D\u0E07
+    \u0E15\u0E32\u0E21\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E17\u0E35\u0E48\u0E01\u0E33\u0E2B\u0E19\u0E14"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 513d54bbf8d95e948bf800b1a70b702c, type: 2}
   m_sharedMaterial: {fileID: -7695865702447755162, guid: 513d54bbf8d95e948bf800b1a70b702c, type: 2}
@@ -62711,7 +62751,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -0.704}
+  m_AnchoredPosition: {x: 0, y: -0.59}
   m_SizeDelta: {x: 430, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2071615776
@@ -63732,7 +63772,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2093924639
 Transform:
   m_ObjectHideFlags: 0
@@ -65061,7 +65101,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: Practice 3
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 513d54bbf8d95e948bf800b1a70b702c, type: 2}
   m_sharedMaterial: {fileID: -7695865702447755162, guid: 513d54bbf8d95e948bf800b1a70b702c, type: 2}
@@ -65292,7 +65332,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1644124439112937425, guid: 11be42432e00dcc4ba7b2bcaa750b5b7, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1787829294905303417, guid: 11be42432e00dcc4ba7b2bcaa750b5b7, type: 3}
       propertyPath: m_Text
@@ -66910,6 +66950,26 @@ PrefabInstance:
     - target: {fileID: 6332276808103680507, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 7172776547260012526, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
+      propertyPath: m_Size.y
+      value: 0.00028234962
+      objectReference: {fileID: 0}
+    - target: {fileID: 7172776547260012526, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
+      propertyPath: m_Size.z
+      value: 0.0022154148
+      objectReference: {fileID: 0}
+    - target: {fileID: 7172776547260012526, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
+      propertyPath: m_Center.x
+      value: -0.000000051162683
+      objectReference: {fileID: 0}
+    - target: {fileID: 7172776547260012526, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
+      propertyPath: m_Center.y
+      value: 0.000116743366
+      objectReference: {fileID: 0}
+    - target: {fileID: 7172776547260012526, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
+      propertyPath: m_Center.z
+      value: 0.00112169
       objectReference: {fileID: 0}
     - target: {fileID: 7777330782954339099, guid: 58e4f9d0ff0aac64b8793532fdd3f4b0, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
