@@ -15,7 +15,11 @@ public class QuizUi2 : MonoBehaviour
 
     private void Start()
     {
-        // เมื่อเริ่มต้น ให้แสดงโจทย์ทั้งหมดใน ScrollView ทันที
+         if (quizmanager != null && resultText != null)
+        {
+            quizmanager.resultText = resultText;
+        }
+
         UpdateTasksDescription();
     }
 
@@ -55,6 +59,20 @@ public class QuizUi2 : MonoBehaviour
         if (resultText != null)
         {
             resultText.text = quizmanager.resultMessage;
+        }
+    }
+     public void SubmitAllTasksAndShowResult()
+    {
+        if (quizmanager == null) return;
+
+        // สั่ง QuizManager1 ตรวจโจทย์ทั้งหมด
+        quizmanager.SubmitScore();
+
+        // แสดงผลลัพธ์คะแนน หรือสรุปผล
+        if (resultText != null)
+        {
+            resultText.text = quizmanager.resultMessage;
+            resultText.text = "บันทึกคะแนนสำเร็จ";
         }
     }
 }

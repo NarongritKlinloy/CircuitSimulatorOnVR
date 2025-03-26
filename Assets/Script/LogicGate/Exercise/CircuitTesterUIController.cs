@@ -14,9 +14,15 @@ public class CircuitTesterUIController : MonoBehaviour
     public void OnCheckCircuitClicked()
     {
         // เรียกใช้ Coroutine เพื่อทำงานต่อเนื่อง
+        
         StartCoroutine(DoCheckCircuit());
     }
-
+    public void OnsubmitCircuit()
+    {
+        // เรียกใช้ Coroutine เพื่อทำงานต่อเนื่อง
+        resultText.text = $"ส่งคะแนนสำเร็จ";
+        circuitTester.SubmitScore();
+    }
     private IEnumerator DoCheckCircuit()
     {
         // สั่งตรวจสอบวงจร
@@ -37,6 +43,7 @@ public class CircuitTesterUIController : MonoBehaviour
             if (finalScore == maxScore)
             {
                 resultText.text = $"คะแนนรวม: {finalScore} / {maxScore}\n\n";
+
             }
             else
             {

@@ -31896,9 +31896,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1684019616}
-        m_TargetAssemblyTypeName: QuizManager3, Assembly-CSharp
-        m_MethodName: SubmitScore
+      - m_Target: {fileID: 871868369}
+        m_TargetAssemblyTypeName: QuizUi2, Assembly-CSharp
+        m_MethodName: SubmitAllTasksAndShowResult
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -37909,9 +37909,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 714745050}
-        m_TargetAssemblyTypeName: CircuitTesterWithScore, Assembly-CSharp
-        m_MethodName: SubmitScore
+      - m_Target: {fileID: 1293844048}
+        m_TargetAssemblyTypeName: CircuitTesterUIController, Assembly-CSharp
+        m_MethodName: OnsubmitCircuit
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -38709,9 +38709,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1216421258}
-        m_TargetAssemblyTypeName: QuizManager2, Assembly-CSharp
-        m_MethodName: SubmitScore
+      - m_Target: {fileID: 993734554}
+        m_TargetAssemblyTypeName: QuizUIController1, Assembly-CSharp
+        m_MethodName: SubmitAllTasksAndShowResult
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -39569,6 +39569,7 @@ MonoBehaviour:
     - 
   totalScore: 0
   resultMessage: 
+  resultText: {fileID: 0}
 --- !u!1 &1217826985
 GameObject:
   m_ObjectHideFlags: 0
@@ -50770,6 +50771,7 @@ MonoBehaviour:
       expectedOutput: 0
   totalScore: 0
   resultMessage: 
+  resultText: {fileID: 0}
 --- !u!1 &1697475456
 GameObject:
   m_ObjectHideFlags: 0
@@ -65332,7 +65334,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1644124439112937425, guid: 11be42432e00dcc4ba7b2bcaa750b5b7, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1787829294905303417, guid: 11be42432e00dcc4ba7b2bcaa750b5b7, type: 3}
       propertyPath: m_Text
