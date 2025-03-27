@@ -4,10 +4,10 @@ using TMPro;
 public class QuizUIController1 : MonoBehaviour
 {
     [Header("อ้างอิงไปยัง QuizManager1")]
-    public QuizManager1 quizManager;  
+    public QuizManager1 quizManager;
 
     [Header("ตำแหน่ง TMP_Text ที่อยู่ใน Content ของ ScrollView")]
-    public TMP_Text tasksScrollText; 
+    public TMP_Text tasksScrollText;
     // ให้เตรียม TextMeshPro (TMP_Text) ไว้ใน Content ของ ScrollView แล้วลากมาใส่ช่องนี้
 
     [Header("Text แสดงผลลัพธ์ (อยู่นอก ScrollView)")]
@@ -15,9 +15,14 @@ public class QuizUIController1 : MonoBehaviour
 
     private void Start()
     {
-        // เมื่อเริ่มต้น ให้แสดงโจทย์ทั้งหมดใน ScrollView ทันที
+        if (quizManager != null && resultText != null)
+        {
+            quizManager.resultText = resultText;
+        }
+
         UpdateTasksDescription();
     }
+
 
     // ฟังก์ชันสร้างข้อความรวมของโจทย์ทุกข้อ แล้วใส่ใน tasksScrollText
     private void UpdateTasksDescription()
@@ -55,6 +60,21 @@ public class QuizUIController1 : MonoBehaviour
         if (resultText != null)
         {
             resultText.text = quizManager.resultMessage;
+        }
+    }
+
+    public void SubmitAllTasksAndShowResult()
+    {
+        if (quizManager == null) return;
+
+        // สั่ง QuizManager1 ตรวจโจทย์ทั้งหมด
+        quizManager.SubmitScore();
+
+        // แสดงผลลัพธ์คะแนน หรือสรุปผล
+        if (resultText != null)
+        {
+            resultText.text = quizManager.resultMessage;
+            resultText.text = "บันทึกคะแนนสำเร็จ";
         }
     }
 }

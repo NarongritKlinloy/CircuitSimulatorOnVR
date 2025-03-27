@@ -3,7 +3,7 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 using System;
-
+using TMPro;
 public class QuizManager1 : MonoBehaviour
 {
     // -----------------------------
@@ -22,6 +22,7 @@ public class QuizManager1 : MonoBehaviour
     [System.Serializable]
     public class LogicTask
     {
+
         [Header("คำอธิบายโจทย์")]
         [TextArea(2, 5)]
         public string description;
@@ -50,7 +51,7 @@ public class QuizManager1 : MonoBehaviour
     public List<LogicTask> tasks = new List<LogicTask>();
     public int totalScore;
     [TextArea(4, 8)] public string resultMessage;
-
+    public TMP_Text resultText; // ✅ เชื่อมกับ TMP_Text จาก UI
     [System.Serializable]
     public class PracticeData
     {
@@ -213,9 +214,9 @@ public class QuizManager1 : MonoBehaviour
     public void SubmitScore()
     {
         CheckAllTasks();
-        Debug.Log("คะแนนที่ส่ง: " + totalScore);
         StartCoroutine(SubmitScoreToServer(totalScore));
     }
+
 
     [System.Serializable]
     public class ScoreRequestData
@@ -262,17 +263,19 @@ public class QuizManager1 : MonoBehaviour
 
             if (request.result == UnityWebRequest.Result.Success)
             {
+                resultMessage = "บันทึกคะแนนสำเร็จ!";
                 Debug.Log("Score saved successfully! Response: " + request.downloadHandler.text);
                 StartCoroutine(SendLogToServer(userId, 1, practiceId));
 
             }
-            else      
+            else
             {
+                resultMessage = "บันทึกคะแนนล้มเหลว: " + request.error;
                 Debug.LogError("Error saving score: " + request.error);
             }
         }
     }
- public IEnumerator SendLogToServer(string userId, int logType, int practiceId)
+    public IEnumerator SendLogToServer(string userId, int logType, int practiceId)
     {
         if (string.IsNullOrEmpty(userId))
         {

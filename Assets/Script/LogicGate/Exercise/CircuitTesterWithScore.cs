@@ -8,7 +8,8 @@ using System;
 // ในที่นี้เราจะใช้คลาส Switch แทน toggle switch interface
 // โดย Switch.cs มีฟังก์ชัน Toggle() และ property IsClosed
 public class CircuitTesterWithScore : MonoBehaviour
-{
+{// สำหรับเก็บคะแนนที่โหลดมาจากฐานข้อมูล
+    public int LoadedScore { get; private set; } = 0;
     // อ้างอิงไปที่ CircuitLab ที่มีใน Scene (กำหนดใน Inspector)
     public CircuitLab circuitLab;
 
@@ -39,8 +40,7 @@ public class CircuitTesterWithScore : MonoBehaviour
         get { return score; }
     }
 
-    // สำหรับเก็บคะแนนที่โหลดมาจากฐานข้อมูล
-    public int LoadedScore { get; private set; } = 0;
+
 
     void Start()
     {
@@ -255,8 +255,10 @@ public class CircuitTesterWithScore : MonoBehaviour
     // -----------------------------
     public void SubmitScore()
     {
+        ErrorMessage = "บันทึกคะแนนเรียบร้อย";
         StartCoroutine(SubmitScoreToServer(score));
     }
+
 
     private IEnumerator SubmitScoreToServer(int score)
     {
@@ -303,7 +305,7 @@ public class CircuitTesterWithScore : MonoBehaviour
             }
         }
     }
-public IEnumerator SendLogToServer(string userId, int logType, int practiceId)
+    public IEnumerator SendLogToServer(string userId, int logType, int practiceId)
     {
         if (string.IsNullOrEmpty(userId))
         {
@@ -383,7 +385,7 @@ public IEnumerator SendLogToServer(string userId, int logType, int practiceId)
                 ScoreResponseData responseData = JsonUtility.FromJson<ScoreResponseData>(request.downloadHandler.text);
                 // เปลี่ยนค่า maxScore และ score ให้ตรงกับคะแนนที่โหลดมาจากฐานข้อมูล
                 maxScore = responseData.practice_score;
-                score = responseData.practice_score;
+                //score = responseData.practice_score;
                 LoadedScore = responseData.practice_score;
                 Debug.Log("Loaded Score: " + LoadedScore);
             }
