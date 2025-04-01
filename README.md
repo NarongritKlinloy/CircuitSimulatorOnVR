@@ -12,7 +12,7 @@
 ### 2. **Clone โปรเจกต์**
    - ใช้คำสั่งด้านล่างใน Terminal หรือ Command Prompt เพื่อ Clone โปรเจกต์:
      ```bash
-     git clone https://github.com/Bachelor-Degree-Hunter/CircuitSimInVr_Unity.git
+     git clone https://github.com/Bachelor-Degree-Hunter/CircuitSimulatorOnVRunity.git
      ```
 
 ### 3. **เพิ่มโปรเจกต์เข้า Unity Hub**
